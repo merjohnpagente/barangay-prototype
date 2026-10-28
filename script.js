@@ -107,8 +107,8 @@ function login(){
   <div class="relative z-10 w-full max-w-md animate-fade-up rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
     <div class="text-center"><p class="text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey &amp; Assistance</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
     <form class="mt-6 space-y-4" onsubmit="event.preventDefault();go('dashboard')">
-      <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Username (optional)" autocomplete="username"></div>
-      <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Password (optional)" autocomplete="current-password"></div>
+      <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username"></div>
+      <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password"></div>
       <button type="submit" class="${btnPrimary} mt-2 w-full px-4 py-3">Login</button>
       <p class="text-center text-[10px] uppercase tracking-[0.16em] text-slate-400">No account needed · Click Login to continue</p>
     </form>
