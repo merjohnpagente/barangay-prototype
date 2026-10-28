@@ -58,7 +58,7 @@ function flash(m){toast=m;draw();setTimeout(()=>{toast='';draw()},1800)}
 function login(){
   return `<div class="min-h-screen bg-cream lg:grid lg:grid-cols-2">
   <div class="relative hidden overflow-hidden bg-pine-900 bg-cover bg-center lg:block" style="background-image:url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&amp;fit=crop&amp;w=1600&amp;q=80')">
-    <div class="absolute inset-0 bg-gradient-to-t from-pine-900 via-pine-900/60 to-pine-900/25"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-pine-900 via-pine-900/65 to-pine-900/40"></div>
     <div class="relative flex h-full flex-col justify-between p-10 xl:p-14">
       <div class="flex items-center gap-3 text-white">
         <div class="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-[11px] font-semibold ring-1 ring-inset ring-white/20">BM</div>
