@@ -11,22 +11,24 @@ const labelCls='mb-1.5 block text-sm font-medium text-slate-700';
 const btn='inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40';
 const btnPrimary=`${btn} bg-pine-700 text-white hover:bg-pine-800`;
 const btnGhost=`${btn} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`;
+const aidStatus=aid=>`<span class="inline-flex items-center gap-1.5 text-sm ${aid==='Given'?'text-emerald-700':'text-amber-700'}"><span class="h-1.5 w-1.5 rounded-full ${aid==='Given'?'bg-emerald-500':'bg-amber-500'}"></span>${aid}</span>`;
+const statCard=(n,l)=>`<div class="rounded-xl border border-slate-200 bg-white p-5"><p class="text-sm text-slate-500">${l}</p><p class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">${n}</p></div>`;
 
-const navItems=[['records','Residents'],['survey','Survey Form'],['assistance','Assistance'],['reports','Reports']];
-const navBtn=(k,l,full=false)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="${full?'lg:w-full ':''}shrink-0 rounded-lg px-3 py-2 text-left text-sm transition-colors ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}">${l}</button>`;
-const logoutBtn=full=>`<button type="button" onclick="go('login')" class="${full?'lg:w-full ':''}shrink-0 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-900 lg:mt-auto">Logout</button>`;
+const navItems=[['dashboard','Dashboard'],['records','Residents'],['survey','Survey'],['assistance','Assistance'],['reports','Reports']];
+const navBtn=(k,l,full=false)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="${full?'lg:w-full ':''}shrink-0 rounded-lg px-2.5 py-2 text-left text-sm transition-colors lg:px-3 ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}">${l}</button>`;
+const logoutBtn=full=>`<button type="button" onclick="go('login')" class="hidden ${full?'lg:w-full ':''}shrink-0 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-900 lg:mt-auto lg:block">Logout</button>`;
 
 function shell(title,subtitle,body,actions=''){
   return `<div class="min-h-screen bg-cream print:bg-white">
   <aside class="flex flex-col border-b border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:w-64 lg:border-b-0 lg:border-r print:hidden">
     <div class="flex items-center gap-3 px-5 py-5">
-      <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-pine-700 text-[11px] font-semibold text-white">BM</div>
-      <div class="min-w-0">
+      <button type="button" onclick="go('dashboard')" class="block min-w-0 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">
         <p class="truncate text-sm font-semibold text-slate-900">Barangay Migcanaway</p>
         <p class="truncate text-xs text-slate-500">Survey &amp; Assistance</p>
-      </div>
+      </button>
+      <button type="button" onclick="go('login')" class="ml-auto rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-900 lg:hidden">Logout</button>
     </div>
-    <nav class="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-1 lg:flex-col lg:gap-0.5 lg:pb-3 lg:pt-1" aria-label="Main navigation">
+    <nav class="flex flex-wrap gap-1 px-3 pb-3 lg:flex-1 lg:flex-col lg:gap-0.5 lg:pb-3 lg:pt-1" aria-label="Main navigation">
       ${navItems.map(([k,l])=>navBtn(k,l,true)).join('')}
       ${logoutBtn(true)}
     </nav>
@@ -49,7 +51,7 @@ function shell(title,subtitle,body,actions=''){
 }
 
 function draw(){
-  const views={login,survey,records:recs,assistance:recs,reports};
+  const views={login,dashboard,survey,records:recs,assistance:recs,reports};
   document.getElementById('app').innerHTML=views[v]()+(toast?`<div class="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${toast}</div></div>`:'');
 }
 function go(k){v=k;page=1;err='';if(k==='login')showPw=false;draw()}
@@ -60,8 +62,7 @@ function login(){
   <div class="relative hidden overflow-hidden bg-pine-900 bg-cover bg-center lg:block" style="background-image:url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&amp;fit=crop&amp;w=1600&amp;q=80')">
     <div class="absolute inset-0 bg-gradient-to-t from-pine-900 via-pine-900/65 to-pine-900/40"></div>
     <div class="relative flex h-full flex-col justify-between p-10 xl:p-14">
-      <div class="flex items-center gap-3 text-white">
-        <div class="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-[11px] font-semibold ring-1 ring-inset ring-white/20">BM</div>
+      <div class="text-white">
         <span class="text-sm font-medium">Barangay Migcanaway</span>
       </div>
       <div class="max-w-md">
@@ -74,12 +75,9 @@ function login(){
   </div>
   <div class="flex min-h-screen items-center justify-center px-5 py-12 sm:px-8 lg:min-h-0">
     <div class="w-full max-w-sm animate-fade-up">
-      <div class="mb-10 flex items-center gap-3 lg:hidden">
-        <div class="grid h-9 w-9 place-items-center rounded-xl bg-pine-700 text-[11px] font-semibold text-white">BM</div>
-        <div class="min-w-0">
-          <p class="truncate text-sm font-semibold text-slate-900">Barangay Migcanaway</p>
-          <p class="truncate text-xs text-slate-500">Survey &amp; Assistance</p>
-        </div>
+      <div class="mb-10 lg:hidden">
+        <p class="text-sm font-semibold text-slate-900">Barangay Migcanaway</p>
+        <p class="text-xs text-slate-500">Survey &amp; Assistance</p>
       </div>
       <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">Barangay staff portal</p>
       <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Welcome back</h1>
@@ -108,7 +106,65 @@ function pw(){const u=document.getElementById('u').value,p=document.getElementBy
 function doLogin(){
   const u=document.getElementById('u').value.trim(),p=document.getElementById('p').value;
   if(!u||!p){err='Please enter your username and password.';draw();document.getElementById('u').value=u;document.getElementById('p').value=p;document.getElementById('u').focus();return}
-  go('records')
+  go('dashboard')
+}
+
+function dashboard(){
+  const recent=Array.from({length:5},(_,i)=>({name:names[i],work:jobs[i],aid:pat[i][1]}));
+  const pending=[
+    ['Reyes, Juan Dela Pena','Medical'],
+    ['Garcia, Ana Lopez','Food Pack'],
+    ['Villanueva, Jose Aquino','Cash Aid'],
+    ['Fernandez, Grace Morales','Livelihood']
+  ];
+  return shell('Dashboard','A quick look at residents and assistance across the barangay.',`<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    ${[['120','Total residents'],['18','PWD residents'],['64','Assisted'],['56','Pending']].map(([n,l])=>statCard(n,l)).join('')}
+  </div>
+  <div class="mt-3 grid gap-3 lg:grid-cols-5">
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white lg:col-span-3">
+      <div class="flex items-start justify-between gap-3 px-5 py-4">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-900">Recent residents</h2>
+          <p class="mt-0.5 text-xs text-slate-500">Latest profiles added to the record.</p>
+        </div>
+        <button type="button" onclick="go('records')" class="rounded-lg px-2 py-1.5 text-xs font-medium text-pine-700 transition-colors hover:bg-pine-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">View all</button>
+      </div>
+      <div class="overflow-x-auto border-t border-slate-100">
+        <table class="w-full min-w-[540px] text-left text-sm">
+          <thead class="bg-slate-50 text-xs font-medium text-slate-500">
+            <tr>
+              <th class="px-5 py-2.5 font-medium">Name</th>
+              <th class="px-4 py-2.5 font-medium">Work</th>
+              <th class="px-5 py-2.5 font-medium">Assistance</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            ${recent.map(r=>`<tr class="transition-colors hover:bg-slate-50/70">
+              <td class="whitespace-nowrap px-5 py-3 font-medium text-slate-900">${r.name}</td>
+              <td class="px-4 py-3 text-slate-500">${r.work}</td>
+              <td class="px-5 py-3">${aidStatus(r.aid)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="flex flex-col rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+      <div>
+        <h2 class="text-sm font-semibold text-slate-900">Pending assistance</h2>
+        <p class="mt-0.5 text-xs text-slate-500">Residents waiting for support.</p>
+      </div>
+      <div class="mt-4 flex-1 space-y-3">
+        ${pending.map(([name,need])=>`<div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-medium text-slate-900">${name}</p>
+            <p class="mt-0.5 text-xs text-slate-500">${need}</p>
+          </div>
+          <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true"></span>
+        </div>`).join('')}
+      </div>
+      <button type="button" class="${btnGhost} mt-5 w-full" onclick="go('assistance')">View assistance</button>
+    </section>
+  </div>`,`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`);
 }
 
 function survey(){
@@ -157,7 +213,6 @@ function recs(){
   });
   const pg=n=>`<button type="button" onclick="page=${n};draw()" ${page===n?'aria-current="page"':''} class="grid h-8 min-w-[2rem] place-items-center rounded-md border px-2 text-xs font-medium transition ${page===n?'border-pine-700 bg-pine-700 text-white':'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}">${n}</button>`;
   const arrow=(target,disabled,symbol,label)=>`<button type="button" ${disabled?'disabled':''} onclick="page=${target};draw()" aria-label="${label}" class="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40">${symbol}</button>`;
-  const status=aid=>`<span class="inline-flex items-center gap-1.5 text-sm ${aid==='Given'?'text-emerald-700':'text-amber-700'}"><span class="h-1.5 w-1.5 rounded-full ${aid==='Given'?'bg-emerald-500':'bg-amber-500'}"></span>${aid}</span>`;
   const actions=isAid?'':`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   return shell(isAid?'Assistance':'Resident Records',isAid?'Track who has received assistance and who is still pending.':'Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <input class="${field} sm:max-w-xs" placeholder="Search name..." aria-label="Search residents">
@@ -182,7 +237,7 @@ function recs(){
             <td class="px-3 py-3.5 text-slate-500">${r.age}</td>
             <td class="px-3 py-3.5 text-slate-500">${r.job}</td>
             <td class="px-3 py-3.5 text-slate-600">${r.pwd}</td>
-            <td class="px-3 py-3.5">${status(r.aid)}</td>
+            <td class="px-3 py-3.5">${aidStatus(r.aid)}</td>
             <td class="px-5 py-3.5 text-right"><button type="button" onclick="go('survey')" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></td>
           </tr>`).join('')}
         </tbody>
@@ -199,11 +254,8 @@ function reports(){
   const stats=[['120','Total residents'],['18','PWD residents'],['64','Assisted'],['56','Pending']];
   const bars=[[75],[42],[100],[30],[62]];
   const projects=[['Feeding Program',82],['Medical Mission',58],['Clean-up Drive',100],['Livelihood Training',36]];
-  return shell('Reports and Summary','A snapshot of residents and assistance across the barangay.',`<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    ${stats.map(([n,l])=>`<div class="rounded-xl border border-slate-200 bg-white p-5">
-      <p class="text-sm text-slate-500">${l}</p>
-      <p class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">${n}</p>
-    </div>`).join('')}
+  return shell('Reports and Summary','A snapshot of residents and assistance across the barangay.',`<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    ${stats.map(([n,l])=>statCard(n,l)).join('')}
   </div>
   <div class="mt-3 grid gap-3 lg:grid-cols-5">
     <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-3">
