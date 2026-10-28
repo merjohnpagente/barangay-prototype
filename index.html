@@ -17,6 +17,7 @@ tailwind.config = {
         pine: {
           50: '#f2f7f4',
           100: '#dfece6',
+          200: '#c3ddd2',
           600: '#1f5a4c',
           700: '#17453b',
           800: '#11342c',
@@ -39,17 +40,25 @@ tailwind.config = {
         'grow-x': {
           '0%': { transform: 'scaleX(0)' },
           '100%': { transform: 'scaleX(1)' }
+        },
+        'slide-in': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(0)' }
         }
       },
       animation: {
         'fade-up': 'fade-up 250ms ease-out both',
         'grow-y': 'grow-y 500ms cubic-bezier(0.22, 1, 0.36, 1) both',
-        'grow-x': 'grow-x 600ms cubic-bezier(0.22, 1, 0.36, 1) both'
+        'grow-x': 'grow-x 600ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'slide-in': 'slide-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both'
       }
     }
   }
 }
 </script>
+<style>
+  :root { color-scheme: light; }
+</style>
 </head>
 <body class="h-full bg-cream font-sans text-slate-900 antialiased">
 <div id="app"></div>
