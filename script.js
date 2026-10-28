@@ -38,7 +38,7 @@ const navBtn=(k,l)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-cu
 const navGroupMarkup=()=>navGroups.map(([label,items])=>`<div><p class="px-3 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">${label}</p><div class="space-y-0.5">${items.map(([k,l])=>navBtn(k,l)).join('')}</div></div>`).join('');
 const logoutBtn=`<button type="button" onclick="logout()" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-red-50 hover:text-red-700">${logoutIcon}Logout</button>`;
 const userCard=`<div class="mx-3 mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-pine-700 text-sm font-bold text-white">SA</span><div class="min-w-0"><p class="truncate text-xs font-semibold text-slate-900">System Admin</p><span class="mt-1 inline-flex rounded-full bg-pine-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-pine-700">Admin</span></div></div>`;
-const brandBlock=`<button type="button" onclick="go('dashboard')" class="block min-w-0 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="mt-1 block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span><span class="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-slate-400">Survey &amp; Assistance</span></button>`;
+const brandBlock=`<button type="button" onclick="go('dashboard')" class="block min-w-0 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="mt-1 block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span><span class="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-slate-400">Tangub City</span><span class="block text-[9px] uppercase tracking-[0.14em] text-slate-400">Survey &amp; Assistance</span></button>`;
 
 function mobileMenu(){
   return `<div id="mobile-menu" class="hidden fixed inset-0 z-50 lg:hidden">
@@ -105,14 +105,14 @@ function login(){
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px]"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px]"></div></div>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
   <div class="relative z-10 w-full max-w-md animate-fade-up rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
-    <div class="text-center"><p class="text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Resident Survey &amp; Assistance</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
+    <div class="text-center"><p class="text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey &amp; Assistance</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
     <form class="mt-6 space-y-4" onsubmit="event.preventDefault();go('dashboard')">
       <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username"></div>
       <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password"></div>
       <button type="submit" class="${btnPrimary} mt-2 w-full px-4 py-3">Login</button>
     </form>
   </div>
-  <p class="relative z-10 text-center text-[10px] uppercase tracking-[0.18em] text-slate-400">Barangay Migcanaway · Resident Survey &amp; Assistance</p>
+  <p class="relative z-10 text-center text-[10px] uppercase tracking-[0.18em] text-slate-400">Barangay Migcanaway · Tangub City</p>
 </div>`;
 }
 
@@ -126,7 +126,7 @@ function dashboard(){
   return shell('Dashboard','A quick look at residents and assistance across the barangay.',`<section class="relative mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
     <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(23,69,59,0.09),transparent_48%)]" aria-hidden="true"></div>
     <p class="pointer-events-none absolute -bottom-6 right-3 select-none text-6xl font-bold tracking-tighter text-pine-900/[0.04] sm:text-8xl" aria-hidden="true">MIGCANAWAY</p>
-    <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's what's happening with residents and assistance today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('assistance')">Review assistance</button></div></div>
+    <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview · Tangub City</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's what's happening with residents and assistance today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('assistance')">Review assistance</button></div></div>
   </section>
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">${stats.map(([n,l,cap,icon,tone])=>dashStat(n,l,cap,icon,tone)).join('')}</div>
   <div class="mt-3 grid gap-3 lg:grid-cols-5">
