@@ -8,10 +8,25 @@ const jobs=['Farmer','Fisherman','Public school teacher','Sari-sari store owner'
 
 const STORE='barangay-residents-v1';
 const seedNeeds={'Reyes, Juan Dela Pena':'Medical','Garcia, Ana Lopez':'Food Pack','Mendoza, Rosa Flores':'Food Pack','Castillo, Liza Navarro':'Medical'};
-const seed=names.map((name,i)=>({name,age:ages[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||''}));
+const birthdays=ages.map((age,i)=>`${2026-age}-${String((i%10)+1).padStart(2,'0')}-${String((i*2)%27+1).padStart(2,'0')}`);
+const seed=names.map((name,i)=>({name,age:ages[i],birthday:birthdays[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||''}));
 let residents=(()=>{try{const saved=JSON.parse(localStorage.getItem(STORE));return Array.isArray(saved)&&saved.length?saved:seed}catch{return seed}})();
 const persist=()=>{try{localStorage.setItem(STORE,JSON.stringify(residents))}catch{}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ageFromBirthday=birthday=>{
+  if(!birthday)return '';
+  const b=new Date(`${birthday}T00:00:00`);
+  if(isNaN(b))return '';
+  const t=new Date();
+  let age=t.getFullYear()-b.getFullYear();
+  if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))age--;
+  return age>=0?age:'';
+};
+const ageOf=r=>{
+  if(!r.birthday)return r.age;
+  const a=ageFromBirthday(r.birthday);
+  return a===''?r.age:a;
+};
 const summary=()=>{const total=residents.length,assisted=residents.filter(r=>r.aid==='Given').length;return {total,pwd:residents.filter(r=>r.pwd==='Yes').length,assisted,pending:total-assisted}};
 const saveResident=rec=>{residents.unshift(rec);persist()};
 
@@ -145,8 +160,9 @@ function survey(){
       <div class="sm:col-span-4"><label class="${labelCls}" for="fullname">Full name</label><input id="fullname" class="${field}" placeholder="Last, First, Middle" required></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female']).replace('<select','<select id="sex"')}</div>
-      <div class="sm:col-span-3"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer"></div>
-      <div class="sm:col-span-3"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks).replace('<select','<select id="purok"')}</div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthday</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer"></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks).replace('<select','<select id="purok"')}</div>
     </div></section>
     <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Assistance details</h2><p class="mt-0.5 text-xs text-slate-500">Needs and notes for this resident.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700">Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700">No</label></div></div>
@@ -162,9 +178,18 @@ function saveSurvey(){
   const val=id=>(document.getElementById(id)||{}).value||'';
   const name=val('fullname').trim();
   if(!name)return;
+  const birthday=val('birthday');
+  const computedAge=ageFromBirthday(birthday);
   const pwd=document.querySelector('input[name="pwd"]:checked');
-  saveResident({name,age:Number(val('age'))||'',sex:val('sex'),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid:'Pending'});
+  saveResident({name,age:computedAge===''?Number(val('age'))||'':computedAge,birthday,sex:val('sex'),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid:'Pending'});
   flash('Resident saved');
+}
+function syncAge(){
+  const b=(document.getElementById('birthday')||{}).value||'';
+  const a=ageFromBirthday(b);
+  if(a==='')return;
+  const input=document.getElementById('age');
+  if(input)input.value=a;
 }
 
 function recs(){
@@ -177,7 +202,7 @@ function recs(){
   const pager=Array.from({length:pages},(_,i)=>pg(i+1)).join('');
   const actions=isAid?'':`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   return shell(isAid?'Assistance':'Resident Records',isAid?'Track who has received assistance and who is still pending.':'Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><input class="${field} sm:max-w-xs" placeholder="Search name..." aria-label="Search residents"><select class="${field} sm:w-48" aria-label="Filter residents"><option>All residents</option><option>PWD residents</option><option>Pending assistance</option></select></div>
-  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[680px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rows.map(r=>`<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.age)}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><button type="button" onclick="go('survey')" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></td></tr>`).join('')}</tbody></table></div>
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[680px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rows.map(r=>`<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><button type="button" onclick="go('survey')" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></td></tr>`).join('')}</tbody></table></div>
   <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>Showing <span class="font-medium text-slate-700">${(page-1)*5+1}–${Math.min(page*5,residents.length)}</span> of ${residents.length} residents</span><div class="flex items-center gap-1.5">${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}</div></div></div>`,actions);
 }
 
