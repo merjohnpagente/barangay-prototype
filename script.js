@@ -113,6 +113,7 @@ function login(){
       <p class="text-center text-[10px] uppercase tracking-[0.16em] text-slate-400">No account needed · Click Login to continue</p>
     </form>
   </div>
+  <p class="relative z-10 text-center text-[10px] uppercase tracking-[0.18em] text-slate-400">Barangay Migcanaway · Tangub City</p>
 </div>`;
 }
 
