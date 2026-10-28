@@ -1,2 +1,3 @@
-# barangay-prototype
-Created via Acode
+# Barangay Migcanaway
+
+Resident Survey and Assistance Tracking System.
