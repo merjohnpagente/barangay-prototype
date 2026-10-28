@@ -44,7 +44,7 @@ function mobileMenu(){
   return `<div id="mobile-menu" class="hidden fixed inset-0 z-50 lg:hidden">
     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="toggleMenu()" aria-hidden="true"></div>
     <aside class="relative flex h-full w-72 max-w-[85%] animate-slide-in flex-col border-r border-slate-200 bg-white shadow-2xl" aria-label="Navigation menu">
-      <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-5">${brandBlock}<button type="button" onclick="toggleMenu()" aria-label="Close navigation" class="-mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">${closeIcon}</button></div>
+      <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-5">${brandBlock}<button type="button" onclick="toggleMenu()" aria-label="Close navigation" title="Close navigation" class="-mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">${closeIcon}</button></div>
       ${userCard}
       <nav class="flex flex-1 flex-col gap-5 overflow-y-auto p-3" aria-label="Mobile navigation">${navGroupMarkup()}</nav>
       <div class="border-t border-slate-200 p-3">${logoutBtn}</div>
@@ -56,9 +56,9 @@ function shell(title,subtitle,body,actions=''){
   const label=(navItems.find(([k])=>k===v)||[,'Dashboard'])[1];
   return `<div class="relative min-h-screen overflow-x-hidden bg-cream text-slate-900 print:bg-white">
   <header class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden print:hidden">
-    <button id="menu-btn" type="button" onclick="toggleMenu()" aria-label="Open navigation" aria-controls="mobile-menu" aria-expanded="false" class="-ml-1 grid h-10 w-10 place-items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">${menuIcon}</button>
-    <p class="pointer-events-none absolute left-1/2 top-1/2 max-w-[45%] -translate-x-1/2 -translate-y-1/2 truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900">${label}</p>
-    <div class="flex items-center gap-1.5"><span class="grid h-8 min-w-[2rem] place-items-center rounded-lg bg-pine-700 px-2 text-[11px] font-bold text-white">SA</span><button type="button" onclick="logout()" aria-label="Logout" class="grid h-9 w-9 place-items-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">${logoutIcon}</button></div>
+    <button id="menu-btn" type="button" onclick="toggleMenu()" aria-label="Open navigation" title="Open navigation" aria-controls="mobile-menu" aria-expanded="false" class="-ml-1 grid h-10 w-10 place-items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">${menuIcon}</button>
+    <p class="pointer-events-none absolute left-1/2 top-1/2 max-w-[40%] -translate-x-1/2 -translate-y-1/2 truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900">${label}</p>
+    <div class="flex items-center gap-1.5"><button type="button" onclick="logout()" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-50 px-2.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">${logoutIcon}<span>Logout</span></button></div>
   </header>
   <aside class="hidden border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-64 lg:flex-col print:hidden">
     <div class="px-5 py-5">${brandBlock}</div>
@@ -107,9 +107,10 @@ function login(){
   <div class="relative z-10 w-full max-w-md animate-fade-up rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
     <div class="text-center"><p class="text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey &amp; Assistance</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
     <form class="mt-6 space-y-4" onsubmit="event.preventDefault();go('dashboard')">
-      <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username"></div>
-      <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password"></div>
+      <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Username (optional)" autocomplete="username"></div>
+      <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Password (optional)" autocomplete="current-password"></div>
       <button type="submit" class="${btnPrimary} mt-2 w-full px-4 py-3">Login</button>
+      <p class="text-center text-[10px] uppercase tracking-[0.16em] text-slate-400">No account needed · Click Login to continue</p>
     </form>
   </div>
   <p class="relative z-10 text-center text-[10px] uppercase tracking-[0.18em] text-slate-400">Barangay Migcanaway · Tangub City</p>
@@ -123,10 +124,15 @@ function dashboard(){
   const pending=residents.filter(r=>r.aid==='Pending').slice(0,4).map(r=>[r.name,r.need||'Assistance']);
   const s=summary();
   const stats=[[s.total,'Total residents','Registered residents',usersIcon,'text-pine-700'],[s.pwd,'PWD residents','Persons with disability',heartIcon,'text-pine-600'],[s.assisted,'Assisted','Received assistance',checkIcon,'text-emerald-600'],[s.pending,'Pending','Awaiting support',clockIcon,'text-amber-500']];
+  const guide=[['1','Add a resident','Use Survey to record details and the assistance needed. Saved residents appear under Residents.','survey','Open survey'],['2','Review assistance','Open Assistance to see who is pending and who has already received support.','assistance','Open assistance'],['3','Check reports','Use Reports to view totals, charts, and print the barangay summary.','reports','Open reports']];
   return shell('Dashboard','A quick look at residents and assistance across the barangay.',`<section class="relative mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
     <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(23,69,59,0.09),transparent_48%)]" aria-hidden="true"></div>
     <p class="pointer-events-none absolute -bottom-6 right-3 select-none text-6xl font-bold tracking-tighter text-pine-900/[0.04] sm:text-8xl" aria-hidden="true">MIGCANAWAY</p>
     <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview · Tangub City</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's what's happening with residents and assistance today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('assistance')">Review assistance</button></div></div>
+  </section>
+  <section class="mb-3 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+    <div><h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">How to use this system</h2><p class="mt-1 text-xs text-slate-500">New here? Follow these three steps to keep resident records and assistance up to date.</p></div>
+    <div class="mt-4 grid gap-3 sm:grid-cols-3">${guide.map(([n,t,c,k,a])=>`<div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4"><div class="flex items-center gap-2"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-pine-700 text-[11px] font-semibold text-white">${n}</span><p class="text-sm font-medium text-slate-900">${t}</p></div><p class="mt-2 text-xs leading-5 text-slate-500">${c}</p><button type="button" onclick="go('${k}')" class="mt-3 text-xs font-medium text-pine-700 transition-colors hover:text-pine-800">${a} →</button></div>`).join('')}</div>
   </section>
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">${stats.map(([n,l,cap,icon,tone])=>dashStat(n,l,cap,icon,tone)).join('')}</div>
   <div class="mt-3 grid gap-3 lg:grid-cols-5">
@@ -174,7 +180,7 @@ function recs(){
   if(page>pages)page=pages;
   const rows=residents.slice((page-1)*5,page*5);
   const pg=n=>`<button type="button" onclick="page=${n};draw()" ${page===n?'aria-current="page"':''} class="grid h-8 min-w-[2rem] place-items-center rounded-md border px-2 text-xs font-medium transition ${page===n?'border-pine-700 bg-pine-700 text-white':'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}">${n}</button>`;
-  const arrow=(target,disabled,symbol,label)=>`<button type="button" ${disabled?'disabled':''} onclick="page=${target};draw()" aria-label="${label}" class="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40">${symbol}</button>`;
+  const arrow=(target,disabled,symbol,label)=>`<button type="button" ${disabled?'disabled':''} onclick="page=${target};draw()" aria-label="${label}" title="${label}" class="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40">${symbol}</button>`;
   const pager=Array.from({length:pages},(_,i)=>pg(i+1)).join('');
   const actions=isAid?'':`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   return shell(isAid?'Assistance':'Resident Records',isAid?'Track who has received assistance and who is still pending.':'Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><input class="${field} sm:max-w-xs" placeholder="Search name..." aria-label="Search residents"><select class="${field} sm:w-48" aria-label="Filter residents"><option>All residents</option><option>PWD residents</option><option>Pending assistance</option></select></div>
