@@ -36,7 +36,7 @@ const navItems=[['dashboard','Dashboard'],['records','Residents'],['survey','Sur
 const navGroups=[['Overview',navItems.slice(0,1)],['Records',navItems.slice(1,3)],['Services',navItems.slice(3,4)],['Insights',navItems.slice(4)]];
 const navBtn=(k,l)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}">${l}</button>`;
 const navGroupMarkup=()=>navGroups.map(([label,items])=>`<div><p class="px-3 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">${label}</p><div class="space-y-0.5">${items.map(([k,l])=>navBtn(k,l)).join('')}</div></div>`).join('');
-const logoutBtn=`<button type="button" onclick="go('login')" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-red-50 hover:text-red-700">${logoutIcon}Logout</button>`;
+const logoutBtn=`<button type="button" onclick="logout()" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-red-50 hover:text-red-700">${logoutIcon}Logout</button>`;
 const userCard=`<div class="mx-3 mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-pine-700 text-sm font-bold text-white">SA</span><div class="min-w-0"><p class="truncate text-xs font-semibold text-slate-900">System Admin</p><span class="mt-1 inline-flex rounded-full bg-pine-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-pine-700">Admin</span></div></div>`;
 const brandBlock=`<button type="button" onclick="go('dashboard')" class="block min-w-0 rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="mt-1 block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span><span class="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-slate-400">Survey &amp; Assistance</span></button>`;
 
@@ -58,7 +58,7 @@ function shell(title,subtitle,body,actions=''){
   <header class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden print:hidden">
     <button id="menu-btn" type="button" onclick="toggleMenu()" aria-label="Open navigation" aria-controls="mobile-menu" aria-expanded="false" class="-ml-1 grid h-10 w-10 place-items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">${menuIcon}</button>
     <p class="pointer-events-none absolute left-1/2 top-1/2 max-w-[45%] -translate-x-1/2 -translate-y-1/2 truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900">${label}</p>
-    <div class="flex items-center gap-1.5"><span class="grid h-8 min-w-[2rem] place-items-center rounded-lg bg-pine-700 px-2 text-[11px] font-bold text-white">SA</span><button type="button" onclick="go('login')" aria-label="Logout" class="grid h-9 w-9 place-items-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">${logoutIcon}</button></div>
+    <div class="flex items-center gap-1.5"><span class="grid h-8 min-w-[2rem] place-items-center rounded-lg bg-pine-700 px-2 text-[11px] font-bold text-white">SA</span><button type="button" onclick="logout()" aria-label="Logout" class="grid h-9 w-9 place-items-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">${logoutIcon}</button></div>
   </header>
   <aside class="hidden border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-64 lg:flex-col print:hidden">
     <div class="px-5 py-5">${brandBlock}</div>
@@ -87,6 +87,9 @@ function draw(){
   document.getElementById('app').innerHTML=views[v]()+(toast?`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${toast}</div></div>`:'');
 }
 function go(k){v=k;page=1;draw()}
+function logout(){
+  if(confirm('Are you sure you want to log out?'))go('login');
+}
 function flash(m){toast=m;draw();setTimeout(()=>{toast='';draw()},1800)}
 function toggleMenu(){
   const panel=document.getElementById('mobile-menu');
