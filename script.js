@@ -9,8 +9,25 @@ const jobs=['Farmer','Fisherman','Public school teacher','Sari-sari store owner'
 const STORE='barangay-residents-v1';
 const seedNeeds={'Reyes, Juan Dela Pena':'Medical','Garcia, Ana Lopez':'Food Pack','Mendoza, Rosa Flores':'Food Pack','Castillo, Liza Navarro':'Medical'};
 const birthdays=ages.map((age,i)=>`${2026-age}-${String((i%10)+1).padStart(2,'0')}-${String((i*2)%27+1).padStart(2,'0')}`);
-const seed=names.map((name,i)=>({name,age:ages[i],birthday:birthdays[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||''}));
-let residents=(()=>{try{const saved=JSON.parse(localStorage.getItem(STORE));return Array.isArray(saved)&&saved.length?saved:seed}catch{return seed}})();
+const seed=names.map((name,i)=>({name,age:ages[i],ageYear:2026,birthday:birthdays[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||''}));
+const nowYear=new Date().getFullYear();
+let residents=(()=>{
+  try{
+    const saved=JSON.parse(localStorage.getItem(STORE));
+    if(!Array.isArray(saved)||!saved.length)return seed;
+    let changed=false;
+    saved.forEach(r=>{
+      if(r.birthday)return;
+      if(!r.ageYear){r.ageYear=nowYear;changed=true}
+      else if(nowYear>r.ageYear){
+        if(r.age!==''&&r.age!=null)r.age=Number(r.age||0)+(nowYear-r.ageYear);
+        r.ageYear=nowYear;changed=true;
+      }
+    });
+    if(changed)localStorage.setItem(STORE,JSON.stringify(saved));
+    return saved;
+  }catch{return seed}
+})();
 const persist=()=>{try{localStorage.setItem(STORE,JSON.stringify(residents))}catch{}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ageFromBirthday=birthday=>{
@@ -23,9 +40,11 @@ const ageFromBirthday=birthday=>{
   return age>=0?age:'';
 };
 const ageOf=r=>{
-  if(!r.birthday)return r.age;
-  const a=ageFromBirthday(r.birthday);
-  return a===''?r.age:a;
+  const a=r.birthday?ageFromBirthday(r.birthday):'';
+  if(a!=='')return a;
+  if(r.age===''||r.age==null)return r.age;
+  const y=new Date().getFullYear();
+  return Number(r.age||0)+Math.max(0,y-(Number(r.ageYear)||y));
 };
 const summary=()=>{const total=residents.length,assisted=residents.filter(r=>r.aid==='Given').length;return {total,pwd:residents.filter(r=>r.pwd==='Yes').length,assisted,pending:total-assisted}};
 const saveResident=rec=>{residents.unshift(rec);persist()};
@@ -180,7 +199,7 @@ function saveSurvey(){
   const birthday=val('birthday');
   const computedAge=ageFromBirthday(birthday);
   const pwd=document.querySelector('input[name="pwd"]:checked');
-  saveResident({name,age:computedAge===''?Number(val('age'))||'':computedAge,birthday,sex:val('sex'),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid:'Pending'});
+  saveResident({name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid:'Pending'});
   flash('Resident saved');
 }
 function syncAge(){
