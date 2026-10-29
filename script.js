@@ -73,7 +73,6 @@ function shell(title,subtitle,body,actions=''){
   <header class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden print:hidden">
     <button id="menu-btn" type="button" onclick="toggleMenu()" aria-label="Open navigation" title="Open navigation" aria-controls="mobile-menu" aria-expanded="false" class="-ml-1 grid h-10 w-10 place-items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">${menuIcon}</button>
     <p class="pointer-events-none absolute left-1/2 top-1/2 max-w-[40%] -translate-x-1/2 -translate-y-1/2 truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900">${label}</p>
-    <div class="flex items-center gap-1.5"><button type="button" onclick="logout()" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-50 px-2.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">${logoutIcon}<span>Logout</span></button></div>
   </header>
   <aside class="hidden border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-64 lg:flex-col print:hidden">
     <div class="px-5 py-5">${brandBlock}</div>
