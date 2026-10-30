@@ -121,7 +121,7 @@ function draw(){
 }
 function go(k){v=k;page=1;q='';filterBy='all';editIndex=-1;draw()}
 function editResident(i){editIndex=i;v='survey';page=1;q='';filterBy='all';draw()}
-function setSearch(value){q=value;page=1;draw()}
+function setSearch(value){q=value;page=1;draw();const el=document.getElementById('search');if(el&&typeof el.focus==='function'){el.focus();if(typeof el.setSelectionRange==='function'){const len=el.value.length;el.setSelectionRange(len,len)}}}
 function setFilter(value){filterBy=value;page=1;draw()}
 function toggleAid(i){
   const r=residents[i];
@@ -267,7 +267,7 @@ function recs(){
   const footer=filtered.length?`Showing <span class="font-medium text-slate-700">${(page-1)*5+1}–${Math.min(page*5,filtered.length)}</span> of ${filtered.length} residents`:'No residents found';
   return shell(isAid?'Assistance':'Resident Records',isAid?'Track who has received assistance and who is still pending.':'Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
-      <input id="search" type="search" class="${field}" placeholder="Search name..." aria-label="Search residents" value="${esc(q)}" enterkeyhint="search"><button type="submit" class="${btnGhost} shrink-0">Search</button>
+      <input id="search" type="search" class="${field}" placeholder="Search name..." aria-label="Search residents" value="${esc(q)}" enterkeyhint="search" oninput="setSearch(this.value)"><button type="submit" class="${btnGhost} shrink-0">Search</button>
     </form>
     <select id="filter" class="${field} sm:w-48" aria-label="Filter residents" onchange="setFilter(this.value)">
       <option value="all" ${filterBy==='all'?'selected':''}>All residents</option>
