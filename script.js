@@ -1,6 +1,6 @@
 const puroks=['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5'];
 const pat=[['Yes','Given'],['No','Pending'],['Yes','Pending'],['No','Given'],['No','Pending']];
-let v='login',page=1,toast='';
+let v='login',page=1,toast='',q='',filterBy='all',editIndex=-1;
 
 const names=['Santos, Maria Cruz','Reyes, Juan Dela Pena','Garcia, Ana Lopez','Bautista, Pedro Ramos','Mendoza, Rosa Flores','Villanueva, Jose Aquino','Castillo, Liza Navarro','Torres, Miguel Santiago','Dizon, Carmen Pascual','Ramos, Antonio Cruz','Fernandez, Grace Morales','Lopez, Ricardo Tan','Aquino, Nena Gutierrez','Domingo, Roberto Salazar','Perez, Joy Valdez'];
 const ages=[34,51,29,63,45,38,57,42,60,26,49,36,58,31,47];
@@ -119,7 +119,31 @@ function draw(){
   const views={login,dashboard,survey,records:recs,assistance:recs,reports};
   document.getElementById('app').innerHTML=views[v]()+(toast?`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${toast}</div></div>`:'');
 }
-function go(k){v=k;page=1;draw()}
+function go(k){v=k;page=1;q='';filterBy='all';editIndex=-1;draw()}
+function editResident(i){editIndex=i;v='survey';page=1;q='';filterBy='all';draw()}
+function setSearch(value){q=value;page=1;draw()}
+function setFilter(value){filterBy=value;page=1;draw()}
+function toggleAid(i){
+  const r=residents[i];
+  r.aid=r.aid==='Given'?'Pending':'Given';
+  persist();
+  flash(r.aid==='Given'?'Marked as given':'Marked as pending');
+}
+function exportCsv(){
+  const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
+  const rows=[['Name','Age','Birthday','Sex','Work','Purok','PWD','Assistance','Need','Remarks'],...residents.map(r=>[r.name,ageOf(r),r.birthday||'',r.sex||'',r.job||'',r.purok||'',r.pwd||'',r.aid||'',r.need||'',r.remarks||''])];
+  const csv=rows.map(row=>row.map(cell).join(',')).join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`barangay-residents-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),0);
+  flash('Export downloaded');
+}
 function logout(){
   if(confirm('Are you sure you want to log out?'))go('login');
 }
@@ -171,24 +195,26 @@ function dashboard(){
 }
 
 function survey(){
-  const so=a=>`<select class="${field}"><option value="">Select</option>${a.map(x=>`<option>${x}</option>`).join('')}</select>`;
-  return shell('Resident Survey Form','Add a resident and record the assistance they need.',`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" onsubmit="event.preventDefault();saveSurvey()">
+  const editing=editIndex>=0;
+  const r=editing?residents[editIndex]:{};
+  const so=(a,selected='')=>`<select class="${field}"><option value="">Select</option>${a.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}</select>`;
+  return shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile and assistance details.':'Add a resident and record the assistance they need.',`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" onsubmit="event.preventDefault();saveSurvey()">
   <div class="space-y-8 p-5 sm:p-7">
     <section><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
-      <div class="sm:col-span-4"><label class="${labelCls}" for="fullname">Full name</label><input id="fullname" class="${field}" placeholder="Last, First, Middle" required></div>
-      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00"></div>
-      <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female']).replace('<select','<select id="sex"')}</div>
-      <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthday</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
-      <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer"></div>
-      <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks).replace('<select','<select id="purok"')}</div>
+      <div class="sm:col-span-4"><label class="${labelCls}" for="fullname">Full name</label><input id="fullname" class="${field}" placeholder="Last, First, Middle" value="${esc(r.name||'')}" required></div>
+      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}"></div>
+      <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex"')}</div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthday</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
     <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Assistance details</h2><p class="mt-0.5 text-xs text-slate-500">Needs and notes for this resident.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
-      <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700">Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700">No</label></div></div>
-      <div class="sm:col-span-3"><label class="${labelCls}" for="need">Assistance needed</label>${so(['Food Pack','Medical','Cash Aid','Livelihood']).replace('<select','<select id="need"')}</div>
-      <div class="sm:col-span-6"><label class="${labelCls}" for="remarks">Remarks</label><textarea id="remarks" class="${field} min-h-[6rem] resize-y" placeholder="Type notes here..."></textarea></div>
+      <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" ${r.pwd==='No'?'checked':''}>No</label></div></div>
+      <div class="sm:col-span-3"><label class="${labelCls}" for="need">Assistance needed</label>${so(['Food Pack','Medical','Cash Aid','Livelihood'],r.need).replace('<select','<select id="need"')}</div>
+      <div class="sm:col-span-6"><label class="${labelCls}" for="remarks">Remarks</label><textarea id="remarks" class="${field} min-h-[6rem] resize-y" placeholder="Type notes here...">${esc(r.remarks||'')}</textarea></div>
     </div></section>
   </div>
-  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}">Clear</button><button type="submit" class="${btnPrimary}">Save resident</button></div>
+  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':'Save resident'}</button></div>
 </form>`);
 }
 
@@ -199,8 +225,18 @@ function saveSurvey(){
   const birthday=val('birthday');
   const computedAge=ageFromBirthday(birthday);
   const pwd=document.querySelector('input[name="pwd"]:checked');
-  saveResident({name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid:'Pending'});
-  flash('Resident saved');
+  const aid=editIndex>=0?residents[editIndex].aid:'Pending';
+  const rec={name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid};
+  if(editIndex>=0){
+    residents[editIndex]=rec;
+    persist();
+    editIndex=-1;
+    go('records');
+    flash('Resident updated');
+  } else {
+    saveResident(rec);
+    flash('Resident saved');
+  }
 }
 function syncAge(){
   const b=(document.getElementById('birthday')||{}).value||'';
@@ -212,28 +248,47 @@ function syncAge(){
 
 function recs(){
   const isAid=v==='assistance';
-  const pages=Math.max(1,Math.ceil(residents.length/5));
+  const needle=q.trim().toLowerCase();
+  const filtered=residents.map((r,i)=>({r,i})).filter(({r})=>
+    (!needle||r.name.toLowerCase().includes(needle)) &&
+    (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':r.aid==='Pending'))
+  );
+  const pages=Math.max(1,Math.ceil(filtered.length/5));
   if(page>pages)page=pages;
-  const rows=residents.slice((page-1)*5,page*5);
+  const rows=filtered.slice((page-1)*5,page*5);
   const pg=n=>`<button type="button" onclick="page=${n};draw()" ${page===n?'aria-current="page"':''} class="grid h-8 min-w-[2rem] place-items-center rounded-md border px-2 text-xs font-medium transition ${page===n?'border-pine-700 bg-pine-700 text-white':'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}">${n}</button>`;
   const arrow=(target,disabled,symbol,label)=>`<button type="button" ${disabled?'disabled':''} onclick="page=${target};draw()" aria-label="${label}" title="${label}" class="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40">${symbol}</button>`;
   const pager=Array.from({length:pages},(_,i)=>pg(i+1)).join('');
   const actions=isAid?'':`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
-  return shell(isAid?'Assistance':'Resident Records',isAid?'Track who has received assistance and who is still pending.':'Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><input class="${field} sm:max-w-xs" placeholder="Search name..." aria-label="Search residents"><select class="${field} sm:w-48" aria-label="Filter residents"><option>All residents</option><option>PWD residents</option><option>Pending assistance</option></select></div>
-  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[680px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rows.map(r=>`<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><button type="button" onclick="go('survey')" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></td></tr>`).join('')}</tbody></table></div>
-  <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>Showing <span class="font-medium text-slate-700">${(page-1)*5+1}–${Math.min(page*5,residents.length)}</span> of ${residents.length} residents</span><div class="flex items-center gap-1.5">${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}</div></div></div>`,actions);
+  const rowMarkup=rows.length?rows.map(({r,i})=>{
+    const aidAction=isAid?`<button type="button" onclick="toggleAid(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">${r.aid==='Given'?'Mark pending':'Mark given'}</button>`:'';
+    return `<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-3">${aidAction}<button type="button" onclick="editResident(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></div></td></tr>`;
+  }).join(''):`<tr><td colspan="6" class="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td></tr>`;
+  const footer=filtered.length?`Showing <span class="font-medium text-slate-700">${(page-1)*5+1}–${Math.min(page*5,filtered.length)}</span> of ${filtered.length} residents`:'No residents found';
+  return shell(isAid?'Assistance':'Resident Records',isAid?'Track who has received assistance and who is still pending.':'Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
+      <input id="search" type="search" class="${field}" placeholder="Search name..." aria-label="Search residents" value="${esc(q)}" enterkeyhint="search"><button type="submit" class="${btnGhost} shrink-0">Search</button>
+    </form>
+    <select id="filter" class="${field} sm:w-48" aria-label="Filter residents" onchange="setFilter(this.value)">
+      <option value="all" ${filterBy==='all'?'selected':''}>All residents</option>
+      <option value="pwd" ${filterBy==='pwd'?'selected':''}>PWD residents</option>
+      <option value="pending" ${filterBy==='pending'?'selected':''}>Pending assistance</option>
+    </select>
+  </div>
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[680px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
+  <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${filtered.length?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`,actions);
 }
 
 function reports(){
   const s=summary();
   const stats=[[s.total,'Total residents'],[s.pwd,'PWD residents'],[s.assisted,'Assisted'],[s.pending,'Pending']];
-  const bars=[[75],[42],[100],[30],[62]];
+  const bars=puroks.map(p=>{const list=residents.filter(r=>r.purok===p);const given=list.filter(r=>r.aid==='Given').length;return [list.length?Math.round(given/list.length*100):0]});
   const projects=[['Feeding Program',82],['Medical Mission',58],['Clean-up Drive',100],['Livelihood Training',36]];
   return shell('Reports and Summary','A snapshot of residents and assistance across the barangay.',`<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">${stats.map(([n,l])=>statCard(n,l)).join('')}</div>
   <div class="mt-3 grid gap-3 lg:grid-cols-5">
     <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-3"><h2 class="text-sm font-medium text-slate-900">Assistance per Purok</h2><p class="mt-0.5 text-xs text-slate-500">Residents assisted in each area.</p><div class="mt-8 flex h-40 items-end gap-3 sm:gap-4">${bars.map(([h],i)=>`<div class="relative flex h-full flex-1 items-end"><span class="absolute inset-x-0 -top-5 text-center text-[11px] font-medium text-slate-400">${h}%</span><div class="w-full origin-bottom animate-grow-y rounded-t bg-pine-700" style="height:${h}%;animation-delay:${i*60}ms" title="Purok ${i+1}: ${h}%"></div></div>`).join('')}</div><div class="mt-3 flex gap-3 border-t border-slate-100 pt-3 sm:gap-4">${bars.map((_,i)=>`<span class="flex-1 text-center text-[11px] text-slate-400">Purok ${i+1}</span>`).join('')}</div></section>
     <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2"><h2 class="text-sm font-medium text-slate-900">Projects and Activities</h2><p class="mt-0.5 text-xs text-slate-500">Ongoing barangay programs.</p><div class="mt-6 space-y-4">${projects.map(([name,p],i)=>`<div><div class="flex items-center justify-between gap-3 text-sm"><span class="text-slate-600">${name}</span><span class="text-xs text-slate-400">${p}%</span></div><div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full origin-left animate-grow-x rounded-full bg-pine-700" style="width:${p}%;animation-delay:${i*60}ms"></div></div></div>`).join('')}</div></section>
-  </div>`,`<button type="button" class="${btnGhost}" onclick="window.print()">Print</button><button type="button" class="${btnPrimary}" onclick="flash('Export started')">Export</button>`);
+  </div>`,`<button type="button" class="${btnGhost}" onclick="window.print()">Print</button><button type="button" class="${btnPrimary}" onclick="exportCsv()">Export</button>`);
 }
 
 draw();
