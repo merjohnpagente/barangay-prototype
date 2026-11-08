@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { clearSession, getToken, getUser, setSession } from './api'
 import Layout from './components/Layout'
+import Backup from './pages/Backup'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Reports from './pages/Reports'
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="residents/:id/edit" element={<Survey notify={notify} />} />
           <Route path="assistance" element={<Residents key="assistance" mode="assistance" notify={notify} />} />
           <Route path="reports" element={<Reports notify={notify} />} />
+          <Route path="backup" element={<Backup notify={notify} />} />
         </Route>
         <Route path="*" element={<Navigate to={token ? '/' : '/login'} replace />} />
       </Routes>

@@ -23,6 +23,10 @@ const navGroups = [
     label: 'Insights',
     items: [{ to: '/reports', label: 'Reports' }],
   },
+  {
+    label: 'System',
+    items: [{ to: '/backup', label: 'Backup' }],
+  },
 ]
 
 function pageLabel(pathname) {
@@ -30,6 +34,7 @@ function pageLabel(pathname) {
   if (pathname.startsWith('/residents')) return 'Residents'
   if (pathname.startsWith('/assistance')) return 'Assistance'
   if (pathname.startsWith('/reports')) return 'Reports'
+  if (pathname.startsWith('/backup')) return 'Backup'
   return 'Dashboard'
 }
 

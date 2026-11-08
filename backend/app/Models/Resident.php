@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Resident extends Model
 {
@@ -35,6 +36,11 @@ class Resident extends Model
             'age_year' => 'integer',
             'pwd' => 'boolean',
         ];
+    }
+
+    public function assistanceRecords(): HasMany
+    {
+        return $this->hasMany(AssistanceRecord::class);
     }
 
     public function currentAge(): ?int

@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import AidStatus from '../components/AidStatus'
+import AssistanceHistory from '../components/AssistanceHistory'
 import { Page } from '../components/Layout'
+import RecordAssistance from '../components/RecordAssistance'
 import { btnGhost, btnPrimary, field } from '../ui'
 
 const PER_PAGE = 10
@@ -43,6 +45,8 @@ export default function Residents({ mode = 'records', notify }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reload, setReload] = useState(0)
+  const [historyResident, setHistoryResident] = useState(null)
+  const [recordResident, setRecordResident] = useState(null)
 
   useEffect(() => {
     let alive = true
@@ -185,14 +189,31 @@ export default function Residents({ mode = 'records', notify }) {
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex justify-end gap-3">
                       {isAid && (
-                        <button
-                          type="button"
-                          onClick={() => toggle(resident)}
-                          className="text-sm font-medium text-pine-700 transition hover:text-pine-800"
-                        >
-                          {resident.assistance === 'Given' ? 'Mark pending' : 'Mark given'}
-                        </button>
+                        resident.assistance === 'Given' ? (
+                          <button
+                            type="button"
+                            onClick={() => toggle(resident)}
+                            className="text-sm font-medium text-pine-700 transition hover:text-pine-800"
+                          >
+                            Mark pending
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setRecordResident(resident)}
+                            className="text-sm font-medium text-pine-700 transition hover:text-pine-800"
+                          >
+                            Mark given
+                          </button>
+                        )
                       )}
+                      <button
+                        type="button"
+                        onClick={() => setHistoryResident(resident)}
+                        className="text-sm font-medium text-pine-700 transition hover:text-pine-800"
+                      >
+                        History
+                      </button>
                       <Link to={`/residents/${resident.id}/edit`} className="text-sm font-medium text-pine-700 transition hover:text-pine-800">
                         Edit
                       </Link>
@@ -260,6 +281,24 @@ export default function Residents({ mode = 'records', notify }) {
           )}
         </div>
       </div>
+
+      {historyResident && (
+        <AssistanceHistory
+          resident={historyResident}
+          onClose={() => setHistoryResident(null)}
+          notify={notify}
+          onChanged={() => setReload((value) => value + 1)}
+        />
+      )}
+
+      {recordResident && (
+        <RecordAssistance
+          resident={recordResident}
+          onClose={() => setRecordResident(null)}
+          onSaved={() => setReload((value) => value + 1)}
+          notify={notify}
+        />
+      )}
     </Page>
   )
 }

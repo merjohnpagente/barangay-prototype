@@ -52,15 +52,23 @@ export async function api(path, { method = 'GET', body, auth = true } = {}) {
   return data
 }
 
-export async function downloadCsv(path, filename) {
+async function download(path, filename, accept) {
   const response = await fetch(`${BASE}/api${path}`, {
     headers: {
-      Accept: 'text/csv',
+      Accept: accept,
       Authorization: `Bearer ${getToken()}`,
     },
   })
 
-  if (!response.ok) throw new Error('Export failed.')
+  if (response.status === 401) {
+    clearSession()
+    window.dispatchEvent(new Event('auth:expired'))
+  }
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.message || 'Download failed.')
+  }
 
   const blob = await response.blob()
   const url = URL.createObjectURL(blob)
@@ -71,4 +79,42 @@ export async function downloadCsv(path, filename) {
   anchor.click()
   anchor.remove()
   setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+export async function downloadCsv(path, filename) {
+  await download(path, filename, 'text/csv')
+}
+
+export async function downloadFile(path, filename) {
+  await download(path, filename, 'application/octet-stream')
+}
+
+export async function uploadFile(path, file, field = 'file') {
+  const body = new FormData()
+  body.append(field, file)
+
+  const response = await fetch(`${BASE}/api${path}`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body,
+  })
+
+  if (response.status === 401) {
+    clearSession()
+    window.dispatchEvent(new Event('auth:expired'))
+  }
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    const error = new Error(data.message || 'Upload failed.')
+    error.status = response.status
+    error.errors = data.errors || {}
+    throw error
+  }
+
+  return data
 }
