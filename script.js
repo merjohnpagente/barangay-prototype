@@ -128,8 +128,15 @@ function draw(){
 }
 function go(k){v=k;page=1;q='';filterBy='all';editIndex=-1;draw()}
 function editResident(i){editIndex=i;v='survey';page=1;q='';filterBy='all';draw()}
-function setSearch(value){q=value;page=1;draw();const el=document.getElementById('search');if(el&&typeof el.focus==='function'){el.focus();if(typeof el.setSelectionRange==='function'){const len=el.value.length;el.setSelectionRange(len,len)}}}
-function setFilter(value){filterBy=value;page=1;draw()}
+let searchTimer;
+function renderRecords(){
+  const results=document.getElementById('records-results');
+  if(results)results.innerHTML=recordsCard();
+  else if(v==='records'||v==='assistance')draw();
+}
+function setSearch(value){q=value;page=1;clearTimeout(searchTimer);searchTimer=setTimeout(renderRecords,120)}
+function setFilter(value){filterBy=value;page=1;renderRecords()}
+function setPage(n){page=n;renderRecords()}
 function toggleAid(i){
   const r=residents[i];
   r.aid=r.aid==='Given'?'Pending':'Given';
@@ -265,7 +272,7 @@ function syncAge(){
   if(input)input.value=a;
 }
 
-function recs(){
+function recordsCard(){
   const isAid=v==='assistance';
   const needle=q.trim().toLowerCase();
   const filtered=residents.map((r,i)=>({r,i})).filter(({r})=>
@@ -276,15 +283,20 @@ function recs(){
   const pages=Math.max(1,Math.ceil(filtered.length/perPage));
   if(page>pages)page=pages;
   const rows=filtered.slice((page-1)*perPage,page*perPage);
-  const pg=n=>`<button type="button" onclick="page=${n};draw()" ${page===n?'aria-current="page"':''} class="grid h-8 min-w-[2rem] place-items-center rounded-md border px-2 text-xs font-medium transition ${page===n?'border-pine-700 bg-pine-700 text-white':'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}">${n}</button>`;
-  const arrow=(target,disabled,symbol,label)=>`<button type="button" ${disabled?'disabled':''} onclick="page=${target};draw()" aria-label="${label}" title="${label}" class="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40">${symbol}</button>`;
+  const pg=n=>`<button type="button" onclick="setPage(${n})" ${page===n?'aria-current="page"':''} class="grid h-8 min-w-[2rem] place-items-center rounded-md border px-2 text-xs font-medium transition ${page===n?'border-pine-700 bg-pine-700 text-white':'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}">${n}</button>`;
+  const arrow=(target,disabled,symbol,label)=>`<button type="button" ${disabled?'disabled':''} onclick="setPage(${target})" aria-label="${label}" title="${label}" class="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40">${symbol}</button>`;
   const pager=Array.from({length:pages},(_,i)=>pg(i+1)).join('');
-  const actions=isAid?'':`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   const rowMarkup=rows.length?rows.map(({r,i})=>{
     const aidAction=isAid?`<button type="button" onclick="toggleAid(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">${r.aid==='Given'?'Mark pending':'Mark given'}</button>`:'';
     return `<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(r.id||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-3">${aidAction}<button type="button" onclick="editResident(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></div></td></tr>`;
   }).join(''):`<tr><td colspan="7" class="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td></tr>`;
   const footer=filtered.length?`Showing <span class="font-medium text-slate-700">${(page-1)*perPage+1}–${Math.min(page*perPage,filtered.length)}</span> of ${filtered.length} residents`:'No residents found';
+  return `<div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[780px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
+  <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`;
+}
+function recs(){
+  const isAid=v==='assistance';
+  const actions=isAid?'':`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   return shell(isAid?'Assistance':'Resident Records',isAid?'Track who has received assistance and who is still pending.':'Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
       <input id="search" type="search" class="${field}" placeholder="Search name or ID..." aria-label="Search residents by name or ID" value="${esc(q)}" enterkeyhint="search" oninput="setSearch(this.value)"><button type="submit" class="${btnGhost} shrink-0">Search</button>
@@ -295,8 +307,7 @@ function recs(){
       <option value="pending" ${filterBy==='pending'?'selected':''}>Pending assistance</option>
     </select>
   </div>
-  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[780px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
-  <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`,actions);
+  <div id="records-results">${recordsCard()}</div>`,actions);
 }
 
 function reports(){
