@@ -32,6 +32,8 @@ class DatabaseSeeder extends Seeder
             ['Ramos, Antonio Cruz', 26, 'Senior high student', 'No', 'Given', ''],
         ];
 
+        $civilStatuses = ['Married', 'Married', 'Single', 'Widowed', 'Married', 'Single', 'Widowed', 'Married', 'Widowed', 'Single'];
+
         Resident::query()->delete();
 
         $timestamp = now();
@@ -51,6 +53,7 @@ class DatabaseSeeder extends Seeder
                 'birthday' => $birthday,
                 'age_year' => 2026,
                 'sex' => $index % 2 === 0 ? 'Female' : 'Male',
+                'civil_status' => $civilStatuses[$index],
                 'job' => $job,
                 'purok' => 'Purok '.(($index % 5) + 1),
                 'pwd' => $pwd === 'Yes',

@@ -7,10 +7,13 @@ import { btnGhost, btnPrimary, field, labelCls } from '../ui'
 const puroks = ['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5']
 const needs = ['Food Pack', 'Medical', 'Cash Aid', 'Livelihood']
 
+const civilStatuses = ['Single', 'Married', 'Widowed', 'Separated', 'Annulled']
+
 const emptyForm = {
   name: '',
   age: '',
   sex: '',
+  civilStatus: 'Single',
   birthday: '',
   job: '',
   purok: '',
@@ -61,6 +64,7 @@ export default function Survey({ notify }) {
           name: data.name || '',
           age: data.age ?? '',
           sex: data.sex || '',
+          civilStatus: data.civil_status || 'Single',
           birthday: data.birthday || '',
           job: data.job || '',
           purok: data.purok || '',
@@ -111,6 +115,7 @@ export default function Survey({ notify }) {
       age: form.age === '' ? null : Number(form.age),
       birthday: form.birthday || null,
       sex: form.sex || null,
+      civil_status: form.civilStatus || 'Single',
       job: form.job.trim() || null,
       purok: form.purok || null,
       pwd: form.pwd,
@@ -128,7 +133,7 @@ export default function Survey({ notify }) {
       notify(editing ? 'Resident updated' : 'Resident saved')
       navigate('/residents')
     } catch (requestError) {
-      setError(requestError.errors?.name?.[0] || requestError.errors?.birthday?.[0] || requestError.message)
+      setError(requestError.errors?.name?.[0] || requestError.errors?.birthday?.[0] || requestError.errors?.civil_status?.[0] || requestError.message)
       nameRef.current?.focus()
     } finally {
       setSaving(false)
@@ -209,6 +214,17 @@ export default function Survey({ notify }) {
                   onChange={(event) => changeBirthday(event.target.value)}
                 />
                 <p id="birthday-hint" className="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p>
+              </div>
+              <div className="sm:col-span-2">
+                <label className={labelCls} htmlFor="civil-status">Civil status</label>
+                <select
+                  id="civil-status"
+                  className={field}
+                  value={form.civilStatus}
+                  onChange={(event) => update('civilStatus', event.target.value)}
+                >
+                  {civilStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls} htmlFor="work">Work / occupation</label>

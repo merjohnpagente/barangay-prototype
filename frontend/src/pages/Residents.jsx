@@ -6,6 +6,14 @@ import { Page } from '../components/Layout'
 import { btnGhost, btnPrimary, field } from '../ui'
 
 const PER_PAGE = 10
+const civilStatuses = ['Single', 'Married', 'Widowed', 'Separated', 'Annulled']
+
+function matchesFilter(resident, filter) {
+  if (filter === 'all') return true
+  if (filter === 'pwd') return resident.pwd === 'Yes'
+  if (filter === 'pending') return resident.assistance === 'Pending'
+  return resident.civil_status === filter
+}
 
 function pageNumbers(current, last) {
   if (last <= 7) return Array.from({ length: last }, (_, index) => index + 1)
@@ -67,11 +75,7 @@ export default function Residents({ mode = 'records', notify }) {
         resident.name.toLowerCase().includes(needle) ||
         resident.code.toLowerCase().includes(needle)
 
-      const matchesFilter =
-        filter === 'all' ||
-        (filter === 'pwd' ? resident.pwd === 'Yes' : resident.assistance === 'Pending')
-
-      return matchesSearch && matchesFilter
+      return matchesSearch && matchesFilter(resident, filter)
     })
   }, [residents, search, filter])
 
@@ -131,6 +135,9 @@ export default function Residents({ mode = 'records', notify }) {
           }}
         >
           <option value="all">All residents</option>
+          <optgroup label="Civil status">
+            {civilStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+          </optgroup>
           <option value="pwd">PWD residents</option>
           <option value="pending">Pending assistance</option>
         </select>
@@ -147,12 +154,13 @@ export default function Residents({ mode = 'records', notify }) {
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[780px] text-left text-sm">
+          <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="bg-slate-50 text-xs font-medium text-slate-500">
               <tr>
                 <th className="px-5 py-3 font-medium">ID</th>
                 <th className="px-3 py-3 font-medium">Name</th>
                 <th className="px-3 py-3 font-medium">Age</th>
+                <th className="px-3 py-3 font-medium">Civil status</th>
                 <th className="px-3 py-3 font-medium">Work</th>
                 <th className="px-3 py-3 font-medium">PWD</th>
                 <th className="px-3 py-3 font-medium">Assistance</th>
@@ -162,7 +170,7 @@ export default function Residents({ mode = 'records', notify }) {
             <tbody className="divide-y divide-slate-100">
               {loading && !residents.length && (
                 <tr>
-                  <td colSpan="7" className="px-5 py-10 text-center text-sm text-slate-500">Loading residents...</td>
+                  <td colSpan="8" className="px-5 py-10 text-center text-sm text-slate-500">Loading residents...</td>
                 </tr>
               )}
               {rows.map((resident) => (
@@ -170,6 +178,7 @@ export default function Residents({ mode = 'records', notify }) {
                   <td className="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">{resident.code}</td>
                   <td className="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">{resident.name}</td>
                   <td className="px-3 py-3.5 text-slate-500">{resident.age ?? ''}</td>
+                  <td className="px-3 py-3.5 text-slate-600">{resident.civil_status}</td>
                   <td className="px-3 py-3.5 text-slate-500">{resident.job}</td>
                   <td className="px-3 py-3.5 text-slate-600">{resident.pwd}</td>
                   <td className="px-3 py-3.5"><AidStatus value={resident.assistance} /></td>
@@ -193,7 +202,7 @@ export default function Residents({ mode = 'records', notify }) {
               ))}
               {!loading && !rows.length && (
                 <tr>
-                  <td colSpan="7" className="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td>
+                  <td colSpan="8" className="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td>
                 </tr>
               )}
             </tbody>

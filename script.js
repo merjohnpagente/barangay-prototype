@@ -5,11 +5,12 @@ let v='login',page=1,toast='',q='',filterBy='all',editIndex=-1;
 const names=['Santos, Maria Cruz','Reyes, Juan Dela Pena','Garcia, Ana Lopez','Bautista, Pedro Ramos','Mendoza, Rosa Flores','Villanueva, Jose Aquino','Castillo, Liza Navarro','Torres, Miguel Santiago','Dizon, Carmen Pascual','Ramos, Antonio Cruz'];
 const ages=[34,51,29,63,45,38,57,42,60,26];
 const jobs=['Farmer','Fisherman','Public school teacher','Sari-sari store owner','Tricycle driver','Carpenter','Nurse','Tailor','Electrician','Senior high student'];
+const civils=['Married','Married','Single','Widowed','Married','Single','Widowed','Married','Widowed','Single'];
 
 const STORE='barangay-residents-v2';
 const seedNeeds={'Reyes, Juan Dela Pena':'Medical','Garcia, Ana Lopez':'Food Pack','Mendoza, Rosa Flores':'Food Pack','Castillo, Liza Navarro':'Medical'};
 const birthdays=ages.map((age,i)=>`${2026-age}-${String((i%10)+1).padStart(2,'0')}-${String((i*2)%27+1).padStart(2,'0')}`);
-const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,name,age:ages[i],ageYear:2026,birthday:birthdays[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||''}));
+const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,name,age:ages[i],ageYear:2026,birthday:birthdays[i],civil:civils[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||''}));
 const nowYear=new Date().getFullYear();
 let residents=(()=>{
   try{
@@ -19,6 +20,7 @@ let residents=(()=>{
     let nextId=saved.reduce((m,r)=>Math.max(m,Number(String(r.id||'').replace(/\D/g,''))||0),0)+1;
     saved.forEach(r=>{
       if(!r.id){r.id=`R-${String(nextId++).padStart(3,'0')}`;changed=true}
+      if(!r.civil){r.civil='Single';changed=true}
       if(r.birthday)return;
       if(!r.ageYear){r.ageYear=nowYear;changed=true}
       else if(nowYear>r.ageYear){
@@ -145,7 +147,7 @@ function toggleAid(i){
 }
 function exportCsv(){
   const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
-  const rows=[['ID','Name','Age','Birthday','Sex','Work','Purok','PWD','Assistance','Need','Remarks'],...residents.map(r=>[r.id||'',r.name,ageOf(r),r.birthday||'',r.sex||'',r.job||'',r.purok||'',r.pwd||'',r.aid||'',r.need||'',r.remarks||''])];
+  const rows=[['ID','Name','Age','Birthday','Sex','Civil Status','Work','Purok','PWD','Assistance','Need','Remarks'],...residents.map(r=>[r.id||'',r.name,ageOf(r),r.birthday||'',r.sex||'',r.civil||'',r.job||'',r.purok||'',r.pwd||'',r.aid||'',r.need||'',r.remarks||''])];
   const csv=rows.map(row=>row.map(cell).join(',')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
@@ -219,6 +221,7 @@ function survey(){
       <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthday</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
@@ -248,7 +251,7 @@ function saveSurvey(){
   const pwd=document.querySelector('input[name="pwd"]:checked');
   const aid=editIndex>=0?residents[editIndex].aid:'Pending';
   const id=editIndex>=0?residents[editIndex].id:makeId();
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),aid};
   if(editIndex>=0){
     residents[editIndex]=rec;
     persist();
@@ -277,7 +280,7 @@ function recordsCard(){
   const needle=q.trim().toLowerCase();
   const filtered=residents.map((r,i)=>({r,i})).filter(({r})=>
     (!needle||r.name.toLowerCase().includes(needle)||String(r.id||'').toLowerCase().includes(needle)) &&
-    (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':r.aid==='Pending'))
+    (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':filterBy==='pending'?r.aid==='Pending':r.civil===filterBy))
   );
   const perPage=10;
   const pages=Math.max(1,Math.ceil(filtered.length/perPage));
@@ -288,10 +291,10 @@ function recordsCard(){
   const pager=Array.from({length:pages},(_,i)=>pg(i+1)).join('');
   const rowMarkup=rows.length?rows.map(({r,i})=>{
     const aidAction=isAid?`<button type="button" onclick="toggleAid(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">${r.aid==='Given'?'Mark pending':'Mark given'}</button>`:'';
-    return `<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(r.id||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-3">${aidAction}<button type="button" onclick="editResident(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></div></td></tr>`;
-  }).join(''):`<tr><td colspan="7" class="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td></tr>`;
+    return `<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(r.id||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.civil||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-3">${aidAction}<button type="button" onclick="editResident(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></div></td></tr>`;
+  }).join(''):`<tr><td colspan="8" class="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td></tr>`;
   const footer=filtered.length?`Showing <span class="font-medium text-slate-700">${(page-1)*perPage+1}–${Math.min(page*perPage,filtered.length)}</span> of ${filtered.length} residents`:'No residents found';
-  return `<div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[780px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
+  return `<div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[900px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Civil status</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
   <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`;
 }
 function recs(){
@@ -303,6 +306,7 @@ function recs(){
     </form>
     <select id="filter" class="${field} sm:w-48" aria-label="Filter residents" onchange="setFilter(this.value)">
       <option value="all" ${filterBy==='all'?'selected':''}>All residents</option>
+      <optgroup label="Civil status">${['Single','Married','Widowed','Separated','Annulled'].map(x=>`<option value="${x}" ${filterBy===x?'selected':''}>${x}</option>`).join('')}</optgroup>
       <option value="pwd" ${filterBy==='pwd'?'selected':''}>PWD residents</option>
       <option value="pending" ${filterBy==='pending'?'selected':''}>Pending assistance</option>
     </select>

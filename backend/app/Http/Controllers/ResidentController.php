@@ -27,6 +27,7 @@ class ResidentController extends Controller
                         ->orWhereRaw('LOWER(code) LIKE ?', [$needle]);
                 });
             })
+            ->when(in_array($filter, Resident::CIVIL_STATUSES, true), fn ($query) => $query->where('civil_status', $filter))
             ->when($filter === 'pwd', fn ($query) => $query->where('pwd', true))
             ->when($filter === 'pending', fn ($query) => $query->where('assistance', 'Pending'))
             ->orderByDesc('created_at')
@@ -49,6 +50,7 @@ class ResidentController extends Controller
             'birthday' => $birthday,
             'age_year' => now()->year,
             'sex' => $data['sex'] ?? null,
+            'civil_status' => $data['civil_status'] ?? 'Single',
             'job' => $data['job'] ?? null,
             'purok' => $data['purok'] ?? null,
             'pwd' => ($data['pwd'] ?? 'No') === 'Yes',
@@ -78,6 +80,7 @@ class ResidentController extends Controller
             'birthday' => $birthday,
             'age_year' => now()->year,
             'sex' => $data['sex'] ?? null,
+            'civil_status' => $data['civil_status'] ?? $resident->civil_status,
             'job' => $data['job'] ?? null,
             'purok' => $data['purok'] ?? null,
             'pwd' => ($data['pwd'] ?? 'No') === 'Yes',
@@ -109,7 +112,7 @@ class ResidentController extends Controller
         return response()->streamDownload(function () use ($residents): void {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
-            fputcsv($output, ['ID', 'Name', 'Age', 'Birthday', 'Sex', 'Work', 'Purok', 'PWD', 'Assistance', 'Need', 'Remarks']);
+            fputcsv($output, ['ID', 'Name', 'Age', 'Birthday', 'Sex', 'Civil Status', 'Work', 'Purok', 'PWD', 'Assistance', 'Need', 'Remarks']);
 
             foreach ($residents as $resident) {
                 fputcsv($output, [
@@ -118,6 +121,7 @@ class ResidentController extends Controller
                     $resident->currentAge(),
                     $resident->birthday?->format('Y-m-d'),
                     $resident->sex,
+                    $resident->civil_status,
                     $resident->job,
                     $resident->purok,
                     $resident->pwd ? 'Yes' : 'No',

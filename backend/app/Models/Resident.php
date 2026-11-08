@@ -9,6 +9,8 @@ class Resident extends Model
 {
     use HasFactory;
 
+    public const CIVIL_STATUSES = ['Single', 'Married', 'Widowed', 'Separated', 'Annulled'];
+
     protected $fillable = [
         'code',
         'name',
@@ -16,6 +18,7 @@ class Resident extends Model
         'birthday',
         'age_year',
         'sex',
+        'civil_status',
         'job',
         'purok',
         'pwd',

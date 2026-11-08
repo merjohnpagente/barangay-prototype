@@ -16,6 +16,7 @@ class ResidentResource extends JsonResource
             'age' => $this->currentAge(),
             'birthday' => $this->birthday?->format('Y-m-d'),
             'sex' => $this->sex,
+            'civil_status' => $this->civil_status,
             'job' => $this->job,
             'purok' => $this->purok,
             'pwd' => $this->pwd ? 'Yes' : 'No',

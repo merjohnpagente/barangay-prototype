@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Resident;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ResidentRequest extends FormRequest
 {
@@ -20,6 +21,7 @@ class ResidentRequest extends FormRequest
             'age' => ['nullable', 'integer', 'min:0', 'max:120'],
             'birthday' => ['nullable', 'date'],
             'sex' => ['nullable', 'in:Male,Female'],
+            'civil_status' => ['nullable', Rule::in(Resident::CIVIL_STATUSES)],
             'job' => ['nullable', 'string', 'max:255'],
             'purok' => ['nullable', 'string', 'max:255'],
             'pwd' => ['nullable', 'in:Yes,No'],

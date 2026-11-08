@@ -44,6 +44,7 @@ class ResidentApiTest extends TestCase
             ->assertOk()
             ->assertJsonCount(10, 'data')
             ->assertJsonPath('data.0.code', 'R-001')
+            ->assertJsonPath('data.0.civil_status', 'Married')
             ->assertJsonPath('data.9.code', 'R-010')
             ->assertJsonPath('meta.total', 10);
     }
@@ -61,12 +62,14 @@ class ResidentApiTest extends TestCase
         $this->postJson('/api/residents', [
             'name' => 'New, Resident One',
             'age' => 30,
+            'civil_status' => 'Married',
             'purok' => 'Purok 1',
             'pwd' => 'No',
         ])
             ->assertCreated()
             ->assertJsonPath('data.code', 'R-011')
-            ->assertJsonPath('data.name', 'New, Resident One');
+            ->assertJsonPath('data.name', 'New, Resident One')
+            ->assertJsonPath('data.civil_status', 'Married');
 
         $this->assertDatabaseCount('residents', 11);
     }
@@ -88,11 +91,31 @@ class ResidentApiTest extends TestCase
         $this->putJson("/api/residents/{$resident->id}", [
             'name' => 'Santos, Maria Cruz',
             'age' => 35,
+            'civil_status' => 'Widowed',
             'purok' => 'Purok 1',
             'pwd' => 'Yes',
         ])
             ->assertOk()
-            ->assertJsonPath('data.age', 35);
+            ->assertJsonPath('data.age', 35)
+            ->assertJsonPath('data.civil_status', 'Widowed');
+    }
+
+    public function test_civil_status_must_be_a_valid_option(): void
+    {
+        $this->postJson('/api/residents', [
+            'name' => 'Invalid Status, Resident',
+            'civil_status' => 'Complicated',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('civil_status');
+    }
+
+    public function test_residents_can_be_filtered_by_civil_status(): void
+    {
+        $this->getJson('/api/residents?filter=Married')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 4)
+            ->assertJsonPath('data.0.civil_status', 'Married');
     }
 
     public function test_assistance_status_can_be_toggled(): void
