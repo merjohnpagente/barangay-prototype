@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pine-50: #f2f7f4;
+  --color-pine-100: #dfece6;
+  --color-pine-200: #c3ddd2;
+  --color-pine-600: #1f5a4c;
+  --color-pine-700: #17453b;
+  --color-pine-800: #11342c;
+  --color-pine-900: #0c2822;
+  --color-cream: #f7f6f2;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --animate-fade-up: fade-up 250ms ease-out both;
+  --animate-grow-y: grow-y 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-grow-x: grow-x 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-slide-in: slide-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes grow-y {
+  0% {
+    transform: scaleY(0);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes grow-x {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes slide-in {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-cream font-sans text-slate-900 antialiased;
+}
