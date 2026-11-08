@@ -12,5 +12,7 @@ Route::fallback(function (Request $request) {
 
     abort_unless(is_file($spa), 404, 'Frontend build not found.');
 
-    return response()->file($spa);
+    return response()->file($spa, [
+        'Cache-Control' => 'no-cache, must-revalidate',
+    ]);
 });
