@@ -16,6 +16,7 @@ class ResidentController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $filter = (string) $request->query('filter', 'all');
+        $perPage = max(1, min((int) $request->query('per_page', 10), 1000));
 
         $residents = Resident::query()
             ->when($search !== '', function ($query) use ($search): void {
@@ -30,7 +31,7 @@ class ResidentController extends Controller
             ->when($filter === 'pending', fn ($query) => $query->where('assistance', 'Pending'))
             ->orderByDesc('created_at')
             ->orderBy('id')
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
         return ResidentResource::collection($residents);

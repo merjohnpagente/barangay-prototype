@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import AidStatus from '../components/AidStatus'
 import { Page } from '../components/Layout'
 import { btnGhost, btnPrimary, field } from '../ui'
+
+const PER_PAGE = 10
 
 function pageNumbers(current, last) {
   if (last <= 7) return Array.from({ length: last }, (_, index) => index + 1)
@@ -27,32 +29,22 @@ function pageNumbers(current, last) {
 export default function Residents({ mode = 'records', notify }) {
   const isAid = mode === 'assistance'
   const [search, setSearch] = useState('')
-  const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [page, setPage] = useState(1)
-  const [payload, setPayload] = useState(null)
+  const [residents, setResidents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reload, setReload] = useState(0)
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setQuery(search.trim())
-      setPage(1)
-    }, 250)
-
-    return () => window.clearTimeout(timer)
-  }, [search])
 
   useEffect(() => {
     let alive = true
     setLoading(true)
     setError('')
 
-    api(`/residents?search=${encodeURIComponent(query)}&filter=${filter}&page=${page}`)
+    api('/residents?per_page=1000')
       .then((data) => {
         if (!alive) return
-        setPayload(data)
+        setResidents(data.data)
         setLoading(false)
       })
       .catch((requestError) => {
@@ -64,7 +56,30 @@ export default function Residents({ mode = 'records', notify }) {
     return () => {
       alive = false
     }
-  }, [query, filter, page, reload])
+  }, [reload])
+
+  const filtered = useMemo(() => {
+    const needle = search.trim().toLowerCase()
+
+    return residents.filter((resident) => {
+      const matchesSearch =
+        !needle ||
+        resident.name.toLowerCase().includes(needle) ||
+        resident.code.toLowerCase().includes(needle)
+
+      const matchesFilter =
+        filter === 'all' ||
+        (filter === 'pwd' ? resident.pwd === 'Yes' : resident.assistance === 'Pending')
+
+      return matchesSearch && matchesFilter
+    })
+  }, [residents, search, filter])
+
+  const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  const current = Math.min(page, pages)
+  const rows = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE)
+  const from = filtered.length ? (current - 1) * PER_PAGE + 1 : 0
+  const to = Math.min(current * PER_PAGE, filtered.length)
 
   const toggle = async (resident) => {
     try {
@@ -76,9 +91,6 @@ export default function Residents({ mode = 'records', notify }) {
     }
   }
 
-  const meta = payload?.meta
-  const residents = payload?.data || []
-  const lastPage = meta?.last_page || 1
   const actions = isAid ? null : <Link to="/residents/new" className={btnPrimary}>Add resident</Link>
 
   return (
@@ -92,7 +104,6 @@ export default function Residents({ mode = 'records', notify }) {
           className="flex gap-2 sm:max-w-md"
           onSubmit={(event) => {
             event.preventDefault()
-            setQuery(search.trim())
             setPage(1)
           }}
         >
@@ -103,7 +114,10 @@ export default function Residents({ mode = 'records', notify }) {
             aria-label="Search residents by name or ID"
             value={search}
             enterKeyHint="search"
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPage(1)
+            }}
           />
           <button type="submit" className={`${btnGhost} shrink-0`}>Search</button>
         </form>
@@ -146,12 +160,12 @@ export default function Residents({ mode = 'records', notify }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {loading && !payload && (
+              {loading && !residents.length && (
                 <tr>
                   <td colSpan="7" className="px-5 py-10 text-center text-sm text-slate-500">Loading residents...</td>
                 </tr>
               )}
-              {residents.map((resident) => (
+              {rows.map((resident) => (
                 <tr key={resident.id} className="transition-colors hover:bg-slate-50/70">
                   <td className="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">{resident.code}</td>
                   <td className="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">{resident.name}</td>
@@ -177,7 +191,7 @@ export default function Residents({ mode = 'records', notify }) {
                   </td>
                 </tr>
               ))}
-              {!loading && !residents.length && (
+              {!loading && !rows.length && (
                 <tr>
                   <td colSpan="7" className="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td>
                 </tr>
@@ -188,24 +202,24 @@ export default function Residents({ mode = 'records', notify }) {
 
         <div className="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span>
-            {meta?.total ? (
-              <>Showing <span className="font-medium text-slate-700">{meta.from}–{meta.to}</span> of {meta.total} residents</>
+            {filtered.length ? (
+              <>Showing <span className="font-medium text-slate-700">{from}–{to}</span> of {filtered.length} residents</>
             ) : (
               'No residents found'
             )}
           </span>
-          {lastPage > 1 && (
+          {pages > 1 && (
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                disabled={page === 1}
-                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                disabled={current === 1}
+                onClick={() => setPage(Math.max(1, current - 1))}
                 aria-label="Previous page"
                 className="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
               >
                 ‹
               </button>
-              {pageNumbers(page, lastPage).map((value, index) =>
+              {pageNumbers(current, pages).map((value, index) =>
                 value === '...' ? (
                   <span key={`gap-${index}`} className="px-1 text-slate-400">…</span>
                 ) : (
@@ -213,9 +227,9 @@ export default function Residents({ mode = 'records', notify }) {
                     key={value}
                     type="button"
                     onClick={() => setPage(value)}
-                    aria-current={page === value ? 'page' : undefined}
+                    aria-current={current === value ? 'page' : undefined}
                     className={`grid h-8 min-w-[2rem] place-items-center rounded-md border px-2 text-xs font-medium transition ${
-                      page === value
+                      current === value
                         ? 'border-pine-700 bg-pine-700 text-white'
                         : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
                     }`}
@@ -226,8 +240,8 @@ export default function Residents({ mode = 'records', notify }) {
               )}
               <button
                 type="button"
-                disabled={page === lastPage}
-                onClick={() => setPage((value) => Math.min(lastPage, value + 1))}
+                disabled={current === pages}
+                onClick={() => setPage(Math.min(pages, current + 1))}
                 aria-label="Next page"
                 className="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
               >
