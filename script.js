@@ -15,6 +15,15 @@ const STORE='barangay-residents-v2';
 const seedNeeds={'Reyes, Juan Dela Pena':'Medical','Garcia, Ana Lopez':'Food Pack','Mendoza, Rosa Flores':'Food Pack','Castillo, Liza Navarro':'Medical'};
 const birthdays=ages.map((age,i)=>`${2026-age}-${String((i%10)+1).padStart(2,'0')}-${String((i*2)%27+1).padStart(2,'0')}`);
 const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,name,age:ages[i],ageYear:2026,birthday:birthdays[i],civil:civils[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||''}));
+const renumber=list=>{
+  let changed=false;
+  [...list].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base'})).forEach((r,i)=>{
+    const id=`R-${String(i+1).padStart(3,'0')}`;
+    if(r.id!==id){r.id=id;changed=true}
+  });
+  return changed;
+};
+renumber(seed);
 const nowYear=new Date().getFullYear();
 let residents=(()=>{
   try{
@@ -32,11 +41,12 @@ let residents=(()=>{
         r.ageYear=nowYear;changed=true;
       }
     });
+    if(renumber(saved))changed=true;
     if(changed)localStorage.setItem(STORE,JSON.stringify(saved));
     return saved;
   }catch{return seed}
 })();
-const persist=()=>{try{localStorage.setItem(STORE,JSON.stringify(residents))}catch{}};
+const persist=()=>{renumber(residents);try{localStorage.setItem(STORE,JSON.stringify(residents))}catch{}};
 const makeId=()=>{
   const max=residents.reduce((m,r)=>{const n=Number(String(r.id||'').replace(/\D/g,''));return Number.isFinite(n)&&n>m?n:m},0);
   return `R-${String(max+1).padStart(3,'0')}`;
