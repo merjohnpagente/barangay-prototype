@@ -1,6 +1,9 @@
 const puroks=['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5'];
 const pat=[['Yes','Given'],['No','Pending'],['Yes','Pending'],['No','Given'],['No','Pending']];
-let v='login',page=1,toast='',q='',filterBy='all',editIndex=-1,loginError='';
+const AUTH_KEY='barangay-session-v1';
+const VIEWS=['dashboard','records','survey','assistance','reports'];
+const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return VIEWS.includes(s)?s:null}catch(e){return null}})();
+let v=savedView||'login',page=1,toast='',q='',filterBy='all',editIndex=-1,loginError='';
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
 const names=['Santos, Maria Cruz','Reyes, Juan Dela Pena','Garcia, Ana Lopez','Bautista, Pedro Ramos','Mendoza, Rosa Flores','Villanueva, Jose Aquino','Castillo, Liza Navarro','Torres, Miguel Santiago','Dizon, Carmen Pascual','Ramos, Antonio Cruz'];
@@ -129,7 +132,11 @@ function draw(){
   const views={login,dashboard,survey,records:recs,assistance:recs,reports};
   document.getElementById('app').innerHTML=views[v]()+(toast?`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${toast}</div></div>`:'');
 }
-function go(k){v=k;page=1;q='';filterBy='all';editIndex=-1;draw()}
+function go(k){
+  v=k;page=1;q='';filterBy='all';editIndex=-1;
+  try{k==='login'?localStorage.removeItem(AUTH_KEY):localStorage.setItem(AUTH_KEY,k)}catch(e){}
+  draw()
+}
 function editResident(i){editIndex=i;v='survey';page=1;q='';filterBy='all';draw()}
 let searchTimer;
 function renderRecords(){
