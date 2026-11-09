@@ -293,7 +293,7 @@ function recordsCard(){
   const filtered=residents.map((r,i)=>({r,i})).filter(({r})=>
     (!needle||r.name.toLowerCase().includes(needle)||String(r.id||'').toLowerCase().includes(needle)) &&
     (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':filterBy==='pending'?r.aid==='Pending':r.civil===filterBy))
-  );
+  ).sort((a,b)=>a.r.name.localeCompare(b.r.name,undefined,{sensitivity:'base'}));
   const perPage=10;
   const pages=Math.max(1,Math.ceil(filtered.length/perPage));
   if(page>pages)page=pages;
