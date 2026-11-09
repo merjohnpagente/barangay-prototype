@@ -147,7 +147,7 @@ function shell(title,subtitle,body,actions=''){
 
 function draw(){
   const views={login,dashboard,survey,records:recs,assistance:recs,reports};
-  document.getElementById('app').innerHTML=views[v]()+((v==='records'||v==='assistance')?residentModal():'')+(toast?`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${toast}</div></div>`:'');
+  document.getElementById('app').innerHTML=views[v]()+((v==='records'||v==='assistance')?residentModal():'');
 }
 function go(k){
   v=k;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;editIndex=-1;
@@ -172,6 +172,7 @@ function toggleAid(i){
   const r=residents[i];
   r.aid=r.aid==='Given'?'Pending':'Given';
   persist();
+  renderRecords();
   flash(r.aid==='Given'?'Marked as given':'Marked as pending');
 }
 function exportCsv(){
@@ -203,7 +204,15 @@ function attemptLogin(){
   loginError='Invalid username or password.';
   draw();
 }
-function flash(m){toast=m;draw();setTimeout(()=>{toast='';draw()},1800)}
+let toastTimer;
+function flash(m){
+  toast=m;
+  let el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el)}
+  el.innerHTML=`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${esc(m)}</div></div>`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{toast='';el.innerHTML=''},1800);
+}
 function toggleMenu(){
   const panel=document.getElementById('mobile-menu');
   const button=document.getElementById('menu-btn');
@@ -337,6 +346,7 @@ function saveSurvey(){
     flash('Resident updated');
   } else {
     saveResident(rec);
+    draw();
     flash('Resident saved');
   }
 }
