@@ -318,7 +318,7 @@ function survey(){
       <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
-    <section class="border-t border-slate-100 pt-8"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Children</h2><p class="mt-0.5 text-xs text-slate-500">List the resident's children and where they live.</p></div><button type="button" class="${btnGhost}" onclick="addChildRow()">Add child</button></div><div id="children-list" class="mt-5 space-y-3">${(Array.isArray(r.children)?r.children:[]).map(childRow).join('')}</div></section>
+    <section class="border-t border-slate-100 pt-8"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Children</h2></div><button type="button" class="${btnGhost}" onclick="addChildRow()">Add child</button></div><div id="children-list" class="mt-5 space-y-3">${(Array.isArray(r.children)?r.children:[]).map(childRow).join('')}</div></section>
     <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Assistance details</h2><p class="mt-0.5 text-xs text-slate-500">Needs and notes for this resident.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" ${r.pwd==='No'?'checked':''}>No</label></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="need">Assistance needed</label>${so(['Food Pack','Medical','Cash Aid','Livelihood'],r.need).replace('<select','<select id="need"')}</div>
@@ -413,7 +413,6 @@ function recs(){
     </select>
     </div>
   </div>
-  <p class="mb-2 text-xs text-slate-500">Tap a resident to see their details and children. <span class="font-medium text-slate-600">View</span> opens details, <span class="font-medium text-slate-600">Edit</span> changes the record${isAid?', <span class="font-medium text-slate-600">Mark given / pending</span> updates their assistance':''}.</p>
   <div id="records-results">${recordsCard()}</div>`,actions);
 }
 
