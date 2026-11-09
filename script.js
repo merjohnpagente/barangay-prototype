@@ -3,7 +3,7 @@ const pat=[['Yes','Given'],['No','Pending'],['Yes','Pending'],['No','Given'],['N
 const AUTH_KEY='barangay-session-v1';
 const VIEWS=['dashboard','records','survey','assistance','reports'];
 const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return VIEWS.includes(s)?s:null}catch(e){return null}})();
-let v=savedView||'login',page=1,toast='',q='',filterBy='all',editIndex=-1,loginError='';
+let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',editIndex=-1,loginError='';
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
 const names=['Santos, Maria Cruz','Reyes, Juan Dela Pena','Garcia, Ana Lopez','Bautista, Pedro Ramos','Mendoza, Rosa Flores','Villanueva, Jose Aquino','Castillo, Liza Navarro','Torres, Miguel Santiago','Dizon, Carmen Pascual','Ramos, Antonio Cruz'];
@@ -143,11 +143,11 @@ function draw(){
   document.getElementById('app').innerHTML=views[v]()+(toast?`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${toast}</div></div>`:'');
 }
 function go(k){
-  v=k;page=1;q='';filterBy='all';editIndex=-1;
+  v=k;page=1;q='';filterBy='all';purokBy='all';editIndex=-1;
   try{k==='login'?localStorage.removeItem(AUTH_KEY):localStorage.setItem(AUTH_KEY,k)}catch(e){}
   draw()
 }
-function editResident(i){editIndex=i;v='survey';page=1;q='';filterBy='all';draw()}
+function editResident(i){editIndex=i;v='survey';page=1;q='';filterBy='all';purokBy='all';draw()}
 let searchTimer;
 function renderRecords(){
   const results=document.getElementById('records-results');
@@ -156,6 +156,7 @@ function renderRecords(){
 }
 function setSearch(value){q=value;page=1;clearTimeout(searchTimer);searchTimer=setTimeout(renderRecords,120)}
 function setFilter(value){filterBy=value;page=1;renderRecords()}
+function setPurok(value){purokBy=value;page=1;renderRecords()}
 function setPage(n){page=n;renderRecords()}
 function toggleAid(i){
   const r=residents[i];
@@ -309,7 +310,8 @@ function recordsCard(){
   const needle=q.trim().toLowerCase();
   const filtered=residents.map((r,i)=>({r,i})).filter(({r})=>
     (!needle||r.name.toLowerCase().includes(needle)||String(r.id||'').toLowerCase().includes(needle)) &&
-    (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':filterBy==='pending'?r.aid==='Pending':r.civil===filterBy))
+    (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':filterBy==='pending'?r.aid==='Pending':r.civil===filterBy)) &&
+    (purokBy==='all'||r.purok===purokBy)
   ).sort((a,b)=>a.r.name.localeCompare(b.r.name,undefined,{sensitivity:'base'}));
   const perPage=10;
   const pages=Math.max(1,Math.ceil(filtered.length/perPage));
@@ -320,10 +322,10 @@ function recordsCard(){
   const pager=Array.from({length:pages},(_,i)=>pg(i+1)).join('');
   const rowMarkup=rows.length?rows.map(({r,i})=>{
     const aidAction=isAid?`<button type="button" onclick="toggleAid(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">${r.aid==='Given'?'Mark pending':'Mark given'}</button>`:'';
-    return `<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(r.id||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.civil||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-3">${aidAction}<button type="button" onclick="editResident(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></div></td></tr>`;
-  }).join(''):`<tr><td colspan="8" class="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td></tr>`;
+    return `<tr class="transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(r.id||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-600">${esc(r.purok||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.civil||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-3 py-3.5">${aidStatus(esc(r.aid))}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-3">${aidAction}<button type="button" onclick="editResident(${i})" class="text-sm font-medium text-pine-700 transition hover:text-pine-800">Edit</button></div></td></tr>`;
+  }).join(''):`<tr><td colspan="9" class="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td></tr>`;
   const footer=filtered.length?`Showing <span class="font-medium text-slate-700">${(page-1)*perPage+1}–${Math.min(page*perPage,filtered.length)}</span> of ${filtered.length} residents`:'No residents found';
-  return `<div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[900px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Civil status</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
+  return `<div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[900px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Purok</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Civil status</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-3 py-3 font-medium">Assistance</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
   <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`;
 }
 function recs(){
@@ -333,7 +335,11 @@ function recs(){
     <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
       <input id="search" type="search" class="${field}" placeholder="Search name or ID..." aria-label="Search residents by name or ID" value="${esc(q)}" enterkeyhint="search" oninput="setSearch(this.value)"><button type="submit" class="${btnGhost} shrink-0">Search</button>
     </form>
-    <select id="filter" class="${field} sm:w-48" aria-label="Filter residents" onchange="setFilter(this.value)">
+    <select id="purok" class="${field} sm:w-40" aria-label="Filter residents by purok" onchange="setPurok(this.value)">
+      <option value="all" ${purokBy==='all'?'selected':''}>All puroks</option>
+      ${puroks.map(x=>`<option value="${x}" ${purokBy===x?'selected':''}>${x}</option>`).join('')}
+    </select>
+    <select id="filter"class="${field} sm:w-48" aria-label="Filter residents" onchange="setFilter(this.value)">
       <option value="all" ${filterBy==='all'?'selected':''}>All residents</option>
       <optgroup label="Civil status">${['Single','Married','Widowed','Separated','Annulled'].map(x=>`<option value="${x}" ${filterBy===x?'selected':''}>${x}</option>`).join('')}</optgroup>
       <option value="pwd" ${filterBy==='pwd'?'selected':''}>PWD residents</option>
