@@ -15,10 +15,10 @@ const civils=['Married','Married','Single','Widowed','Married','Single','Widowed
 const STORE='barangay-residents-v2';
 const seedNeeds={'Reyes, Juan Dela Pena':'Medical','Garcia, Ana Lopez':'Food Pack','Mendoza, Rosa Flores':'Food Pack','Castillo, Liza Navarro':'Medical'};
 const seedChildren={
-  'Santos, Maria Cruz':[{name:'Santos, Mark Cruz',age:12,here:'Yes'},{name:'Santos, Anna Cruz',age:9,here:'Yes'}],
-  'Reyes, Juan Dela Pena':[{name:'Reyes, Paolo Dela Pena',age:24,here:'No'},{name:'Reyes, Jenny Dela Pena',age:19,here:'Yes'}],
-  'Bautista, Pedro Ramos':[{name:'Bautista, Carlo Ramos',age:35,here:'No'}],
-  'Mendoza, Rosa Flores':[{name:'Mendoza, Liza Flores',age:16,here:'Yes'}]
+  'Santos, Maria Cruz':[{name:'Santos, Mark Cruz',age:12,here:'Yes',purok:'Purok 1',place:''},{name:'Santos, Anna Cruz',age:9,here:'Yes',purok:'Purok 1',place:''}],
+  'Reyes, Juan Dela Pena':[{name:'Reyes, Paolo Dela Pena',age:24,here:'No',purok:'',place:'Dipolog City, Zamboanga del Norte'},{name:'Reyes, Jenny Dela Pena',age:19,here:'Yes',purok:'Purok 2',place:''}],
+  'Bautista, Pedro Ramos':[{name:'Bautista, Carlo Ramos',age:35,here:'No',purok:'',place:'Ozamiz City, Misamis Occidental'}],
+  'Mendoza, Rosa Flores':[{name:'Mendoza, Liza Flores',age:16,here:'Yes',purok:'Purok 5',place:''}]
 };
 const birthdays=ages.map((age,i)=>`${2026-age}-${String((i%10)+1).padStart(2,'0')}-${String((i*2)%27+1).padStart(2,'0')}`);
 const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,name,age:ages[i],ageYear:2026,birthday:birthdays[i],civil:civils[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||'',children:seedChildren[name]||[]}));
@@ -42,6 +42,11 @@ let residents=(()=>{
       if(!r.id){r.id=`R-${String(nextId++).padStart(3,'0')}`;changed=true}
       if(!r.civil){r.civil='Single';changed=true}
       if(!Array.isArray(r.children)){r.children=seedChildren[r.name]||[];changed=true}
+      r.children.forEach(c=>{
+        if(c.purok!==undefined||c.place!==undefined)return;
+        const sc=(seedChildren[r.name]||[]).find(x=>x.name===c.name);
+        c.purok=sc?sc.purok:'';c.place=sc?sc.place:'';changed=true;
+      });
       if(r.birthday)return;
       if(!r.ageYear){r.ageYear=nowYear;changed=true}
       else if(nowYear>r.ageYear){
@@ -270,9 +275,18 @@ function dashboard(){
 const childRow=(c={})=>`<div class="child-row grid grid-cols-12 items-center gap-2">
   <input class="child-name ${field} col-span-12 sm:col-span-4" placeholder="Child's full name" aria-label="Child's full name" value="${esc(c.name||'')}">
   <input type="number" min="0" max="120" class="child-age ${field} col-span-4 sm:col-span-2" placeholder="Age" aria-label="Child's age" value="${esc(c.age??'')}">
-  <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Lives in Barangay Migcanaway"><option value="Yes" ${c.here!=='No'?'selected':''}>Lives in Migcanaway</option><option value="No" ${c.here==='No'?'selected':''}>Lives elsewhere</option></select>
+  <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Lives in Barangay Migcanaway" onchange="childPlaceToggle(this)"><option value="Yes" ${c.here!=='No'?'selected':''}>Lives in Migcanaway</option><option value="No" ${c.here==='No'?'selected':''}>Lives elsewhere</option></select>
   <button type="button" onclick="this.closest('.child-row').remove()" class="col-span-12 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:col-span-3" aria-label="Remove this child" title="Remove this child">${closeIcon}<span>Remove</span></button>
+  <div class="child-purok-wrap col-span-12 ${c.here==='No'?'hidden':''}"><select class="child-purok ${field}" aria-label="Child's purok"><option value="">Select purok</option>${puroks.map(x=>`<option ${x===c.purok?'selected':''}>${x}</option>`).join('')}</select></div>
+  <div class="child-place-wrap col-span-12 ${c.here==='No'?'':'hidden'}"><input class="child-place ${field}" placeholder="City / municipality, province" aria-label="Child's city or municipality and province" value="${esc(c.place||'')}"></div>
 </div>`;
+function childPlaceToggle(sel){
+  const row=sel.closest('.child-row');
+  if(!row)return;
+  const elsewhere=sel.value==='No';
+  row.querySelector('.child-purok-wrap').classList.toggle('hidden',elsewhere);
+  row.querySelector('.child-place-wrap').classList.toggle('hidden',!elsewhere);
+}
 function addChildRow(){
   const list=document.getElementById('children-list');
   if(!list)return;
@@ -283,7 +297,10 @@ function addChildRow(){
 function readChildren(){
   return [...document.querySelectorAll('.child-row')].map(row=>{
     const age=row.querySelector('.child-age').value;
-    return {name:row.querySelector('.child-name').value.trim(),age:age===''?'':Number(age),here:row.querySelector('.child-here').value==='No'?'No':'Yes'};
+    const here=row.querySelector('.child-here').value==='No'?'No':'Yes';
+    return {name:row.querySelector('.child-name').value.trim(),age:age===''?'':Number(age),here,
+      purok:here==='Yes'?row.querySelector('.child-purok').value:'',
+      place:here==='No'?row.querySelector('.child-place').value.trim():''};
   }).filter(c=>c.name);
 }
 function residentModal(){
@@ -292,7 +309,7 @@ function residentModal(){
   const kids=Array.isArray(r.children)?r.children:[];
   const row=(l,val)=>`<div><dt class="text-[11px] font-medium uppercase tracking-wide text-slate-400">${l}</dt><dd class="mt-0.5 text-sm text-slate-800">${val===''||val==null?'—':esc(val)}</dd></div>`;
   const here=kids.filter(c=>c.here!=='No').length;
-  const kidList=kids.length?kids.map(c=>`<li class="flex items-center justify-between gap-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-900">${esc(c.name)}</p><p class="text-xs text-slate-500">${c.age===''||c.age==null?'Age not recorded':esc(c.age)+' years old'}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${c.here==='No'?'bg-amber-50 text-amber-700':'bg-emerald-50 text-emerald-700'}">${c.here==='No'?'Lives elsewhere':'Lives in Migcanaway'}</span></li>`).join(''):`<li class="py-3 text-sm text-slate-500">No children recorded.</li>`;
+  const kidList=kids.length?kids.map(c=>`<li class="flex items-center justify-between gap-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-900">${esc(c.name)}</p><p class="text-xs text-slate-500">${[c.age===''||c.age==null?'Age not recorded':esc(c.age)+' years old',esc(c.here==='No'?c.place:c.purok)].filter(Boolean).join(' · ')}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${c.here==='No'?'bg-amber-50 text-amber-700':'bg-emerald-50 text-emerald-700'}">${c.here==='No'?'Lives elsewhere':'Lives in Migcanaway'}</span></li>`).join(''):`<li class="py-3 text-sm text-slate-500">No children recorded.</li>`;
   return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)closeResident()" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="closeResident()" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
