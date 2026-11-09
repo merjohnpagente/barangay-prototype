@@ -1,6 +1,7 @@
 const puroks=['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5'];
 const pat=[['Yes','Given'],['No','Pending'],['Yes','Pending'],['No','Given'],['No','Pending']];
-let v='login',page=1,toast='',q='',filterBy='all',editIndex=-1;
+let v='login',page=1,toast='',q='',filterBy='all',editIndex=-1,loginError='';
+const AUTH_USER='admin',AUTH_PASS='admin123';
 
 const names=['Santos, Maria Cruz','Reyes, Juan Dela Pena','Garcia, Ana Lopez','Bautista, Pedro Ramos','Mendoza, Rosa Flores','Villanueva, Jose Aquino','Castillo, Liza Navarro','Torres, Miguel Santiago','Dizon, Carmen Pascual','Ramos, Antonio Cruz'];
 const ages=[34,51,29,63,45,38,57,42,60,26];
@@ -161,7 +162,18 @@ function exportCsv(){
   flash('Export downloaded');
 }
 function logout(){
-  if(confirm('Are you sure you want to log out?'))go('login');
+  if(confirm('Are you sure you want to log out?')){loginError='';go('login')}
+}
+function attemptLogin(){
+  const username=(document.getElementById('u')?.value||'').trim();
+  const password=document.getElementById('p')?.value||'';
+  if(username===AUTH_USER&&password===AUTH_PASS){
+    loginError='';
+    go('dashboard');
+    return;
+  }
+  loginError='Invalid username or password.';
+  draw();
 }
 function flash(m){toast=m;draw();setTimeout(()=>{toast='';draw()},1800)}
 function toggleMenu(){
@@ -179,11 +191,11 @@ function login(){
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
   <div class="relative z-10 w-full max-w-md animate-fade-up rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
     <div class="text-center"><div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="Barangay Migcanaway seal" class="h-16 w-16 rounded-full object-cover ring-1 ring-slate-200 sm:h-20 sm:w-20"><img src="assets/tangub-logo.jpg" alt="Tangub City seal" class="h-16 w-16 object-contain sm:h-20 sm:w-20"></div><p class="mt-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey &amp; Assistance</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
-    <form class="mt-6 space-y-4" onsubmit="event.preventDefault();go('dashboard')">
-      <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username"></div>
-      <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password"></div>
+    <form class="mt-6 space-y-4" onsubmit="event.preventDefault();attemptLogin()">
+      <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username" required></div>
+      <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password" required></div>
+      ${loginError?`<p role="alert" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">${loginError}</p>`:''}
       <button type="submit" class="${btnPrimary} mt-2 w-full px-4 py-3">Login</button>
-      <p class="text-center text-[10px] uppercase tracking-[0.16em] text-slate-400">No account needed · Click Login to continue</p>
     </form>
   </div>
 </div>`;
