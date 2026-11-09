@@ -61,6 +61,7 @@ const makeId=()=>{
 };
 const normName=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||'');return m?`${m[3]}-${m[2]}-${m[1]}`:(d||'')};
 const ageFromBirthday=birthday=>{
   if(!birthday)return '';
   const b=new Date(`${birthday}T00:00:00`);
@@ -185,7 +186,7 @@ function toggleAid(i){
 }
 function exportCsv(){
   const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
-  const rows=[['ID','Name','Age','Birthday','Sex','Civil Status','Work','Purok','PWD','Assistance','Need','Remarks'],...residents.map(r=>[r.id||'',r.name,ageOf(r),r.birthday||'',r.sex||'',r.civil||'',r.job||'',r.purok||'',r.pwd||'',r.aid||'',r.need||'',r.remarks||''])];
+  const rows=[['ID','Name','Age','Birthdate','Sex','Civil Status','Work','Purok','PWD','Assistance','Need','Remarks'],...residents.map(r=>[r.id||'',r.name,ageOf(r),r.birthday||'',r.sex||'',r.civil||'',r.job||'',r.purok||'',r.pwd||'',r.aid||'',r.need||'',r.remarks||''])];
   const csv=rows.map(row=>row.map(cell).join(',')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
@@ -296,7 +297,7 @@ function residentModal(){
   return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)closeResident()" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="closeResident()" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
-    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r))}${row('Sex',r.sex)}${row('Birthday',r.birthday)}${row('Civil status',r.civil)}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Assistance',r.aid+(r.need?' · '+r.need:''))}${row('Purok',r.purok)}</dl>
+    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Assistance',r.aid+(r.need?' · '+r.need:''))}${row('Purok',r.purok)}</dl>
     ${r.remarks?`<div class="mt-4"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Remarks</p><p class="mt-0.5 whitespace-pre-line text-sm text-slate-700">${esc(r.remarks)}</p></div>`:''}
     <div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Children</h3>${kids.length?`<span class="text-xs text-slate-500">${here} of ${kids.length} resident${kids.length>1?'s':''}</span>`:''}</div><ul class="mt-1 divide-y divide-slate-100">${kidList}</ul></div>
     <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btnPrimary}" onclick="editResident(${viewIndex})">Edit</button></div>
@@ -313,7 +314,7 @@ function survey(){
       <div class="sm:col-span-4"><label class="${labelCls}" for="fullname">Full name</label><input id="fullname" class="${field}" placeholder="Last, First, Middle" value="${esc(r.name||'')}" required oninput="clearFormError()"><p id="form-error" class="mt-1 hidden text-xs font-medium text-red-600" role="alert"></p></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex"')}</div>
-      <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthday</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>

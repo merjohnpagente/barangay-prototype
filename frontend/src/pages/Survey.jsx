@@ -204,7 +204,7 @@ export default function Survey({ notify }) {
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className={labelCls} htmlFor="birthday">Birthday</label>
+                <label className={labelCls} htmlFor="birthday">Birthdate</label>
                 <input
                   id="birthday"
                   type="date"
