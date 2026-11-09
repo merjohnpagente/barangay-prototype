@@ -35,12 +35,6 @@ class ReportController extends Controller
                 'pending' => $total - $assisted,
             ],
             'puroks' => $bars,
-            'projects' => [
-                ['name' => 'Feeding Program', 'percent' => 82],
-                ['name' => 'Medical Mission', 'percent' => 58],
-                ['name' => 'Clean-up Drive', 'percent' => 100],
-                ['name' => 'Livelihood Training', 'percent' => 36],
-            ],
         ]);
     }
 }
