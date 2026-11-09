@@ -3,6 +3,7 @@ const pat=[['Yes','Given'],['No','Pending'],['Yes','Pending'],['No','Given'],['N
 const AUTH_KEY='barangay-session-v1';
 const VIEWS=['dashboard','records','survey','assistance','reports'];
 const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return VIEWS.includes(s)?s:null}catch(e){return null}})();
+let animateNext=true;
 let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,editIndex=-1,loginError='';
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
@@ -131,7 +132,7 @@ function shell(title,subtitle,body,actions=''){
   </aside>
   <div class="relative z-10 lg:pl-64 print:pl-0">
     <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-10 lg:py-12 print:max-w-none print:p-0">
-      <div class="animate-fade-up">
+      <div class="${animateNext?'animate-fade-up':''}">
         ${actions?`<div class="mb-4 flex flex-wrap items-center gap-2 lg:hidden print:hidden">${actions}</div>`:''}
         <div class="mb-8 hidden flex-wrap items-start justify-between gap-4 lg:flex">
           <div><h1 class="text-2xl font-semibold tracking-tight text-slate-900">${title}</h1><p class="mt-1 text-sm text-slate-500">${subtitle}</p></div>
@@ -147,16 +148,23 @@ function shell(title,subtitle,body,actions=''){
 
 function draw(){
   const views={login,dashboard,survey,records:recs,assistance:recs,reports};
-  document.getElementById('app').innerHTML=views[v]()+((v==='records'||v==='assistance')?residentModal():'');
+  document.getElementById('app').innerHTML=views[v]();
+  animateNext=false;
+  renderModal();
+}
+function renderModal(){
+  let el=document.getElementById('modal-root');
+  if(!el){el=document.createElement('div');el.id='modal-root';document.body.appendChild(el)}
+  el.innerHTML=(viewIndex>=0&&(v==='records'||v==='assistance'))?residentModal():'';
 }
 function go(k){
-  v=k;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;editIndex=-1;
+  v=k;animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;editIndex=-1;
   try{k==='login'?localStorage.removeItem(AUTH_KEY):localStorage.setItem(AUTH_KEY,k)}catch(e){}
   draw()
 }
-function editResident(i){editIndex=i;v='survey';page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;draw()}
-function openResident(i){viewIndex=i;draw()}
-function closeResident(){viewIndex=-1;draw()}
+function editResident(i){editIndex=i;v='survey';animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;draw()}
+function openResident(i){viewIndex=i;renderModal()}
+function closeResident(){viewIndex=-1;renderModal()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&viewIndex>=0)closeResident()});
 let searchTimer;
 function renderRecords(){
@@ -226,7 +234,7 @@ function login(){
   return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px]"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px]"></div></div>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
-  <div class="relative z-10 w-full max-w-md animate-fade-up rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
+  <div class="relative z-10 w-full max-w-md ${animateNext?'animate-fade-up':''} rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
     <div class="text-center"><div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="Barangay Migcanaway seal" class="h-16 w-16 rounded-full object-cover ring-1 ring-slate-200 sm:h-20 sm:w-20"><img src="assets/tangub-logo.jpg" alt="Tangub City seal" class="h-16 w-16 object-contain sm:h-20 sm:w-20"></div><p class="mt-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey &amp; Assistance</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
     <form class="mt-6 space-y-4" onsubmit="event.preventDefault();attemptLogin()">
       <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username" required></div>
