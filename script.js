@@ -335,16 +335,18 @@ function recs(){
     <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
       <input id="search" type="search" class="${field}" placeholder="Search name or ID..." aria-label="Search residents by name or ID" value="${esc(q)}" enterkeyhint="search" oninput="setSearch(this.value)"><button type="submit" class="${btnGhost} shrink-0">Search</button>
     </form>
-    <select id="purok" class="${field} sm:w-40" aria-label="Filter residents by purok" onchange="setPurok(this.value)">
+    <div class="flex gap-2">
+    <select id="purok-filter" class="${field} min-w-0 flex-1 sm:w-40 sm:flex-none" aria-label="Filter residents by purok" onchange="setPurok(this.value)">
       <option value="all" ${purokBy==='all'?'selected':''}>All puroks</option>
       ${puroks.map(x=>`<option value="${x}" ${purokBy===x?'selected':''}>${x}</option>`).join('')}
     </select>
-    <select id="filter"class="${field} sm:w-48" aria-label="Filter residents" onchange="setFilter(this.value)">
+    <select id="filter" class="${field} min-w-0 flex-1 sm:w-48 sm:flex-none" aria-label="Filter residents" onchange="setFilter(this.value)">
       <option value="all" ${filterBy==='all'?'selected':''}>All residents</option>
       <optgroup label="Civil status">${['Single','Married','Widowed','Separated','Annulled'].map(x=>`<option value="${x}" ${filterBy===x?'selected':''}>${x}</option>`).join('')}</optgroup>
       <option value="pwd" ${filterBy==='pwd'?'selected':''}>PWD residents</option>
       <option value="pending" ${filterBy==='pending'?'selected':''}>Pending assistance</option>
     </select>
+    </div>
   </div>
   <div id="records-results">${recordsCard()}</div>`,actions);
 }
