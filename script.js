@@ -278,10 +278,27 @@ const childRow=(c={})=>`<div class="child-row grid grid-cols-12 items-center gap
   <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Resident of Barangay Migcanaway or not"><option value="Yes" ${c.here!=='No'?'selected':''}>Resident</option><option value="No" ${c.here==='No'?'selected':''}>Non-resident</option></select>
   <button type="button" onclick="this.closest('.child-row').remove()" class="col-span-12 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:col-span-3" aria-label="Remove this child" title="Remove this child">${closeIcon}<span>Remove</span></button>
 </div>`;
+function splitName(str){
+  const t=String(str||'').trim();
+  if(!t)return {last:'',first:'',middle:''};
+  if(t.includes(',')){
+    const i=t.indexOf(',');
+    const rest=t.slice(i+1).trim().split(/\s+/).filter(Boolean);
+    return {last:t.slice(0,i).trim(),first:rest[0]||'',middle:rest.slice(1).join(' ')};
+  }
+  const w=t.split(/\s+/);
+  return w.length===1?{last:w[0],first:'',middle:''}:{last:w[w.length-1],first:w[0],middle:w.slice(1,-1).join(' ')};
+}
+const joinName=(last,first,middle)=>{
+  last=String(last||'').trim();first=String(first||'').trim();middle=String(middle||'').trim();
+  const given=[first,middle].filter(Boolean).join(' ');
+  return last&&given?`${last}, ${given}`:(last||given);
+};
 function syncSpouse(){
   const val=id=>(document.getElementById(id)||{}).value||'';
   const wrap=document.getElementById('spouse-wrap'),label=document.getElementById('spouse-label');
-  if(wrap)wrap.classList.toggle('hidden',val('civil')!=='Married'&&!val('spouse').trim());
+  const hasSpouse=['spouse-last','spouse-first','spouse-middle'].some(k=>val(k).trim());
+  if(wrap)wrap.classList.toggle('hidden',val('civil')!=='Married'&&!hasSpouse);
   if(label)label.textContent=spouseLabel(val('sex'));
 }
 function addChildRow(){
@@ -318,16 +335,18 @@ function residentModal(){
 function survey(){
   const editing=editIndex>=0;
   const r=editing?residents[editIndex]:{};
+  const nm=splitName(r.name),sp=splitName(r.spouse);
   const so=(a,selected='')=>`<select class="${field}"><option value="">Select</option>${a.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}</select>`;
   return shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile and assistance details.':'Add a resident and record the assistance they need.',`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" onsubmit="event.preventDefault();saveSurvey()">
   <div class="space-y-8 p-5 sm:p-7">
     <section><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p></div><div class="flex items-center gap-2">${editing?`<span class="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span>`:''}<button type="button" onclick="go('records')" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close and return to Residents" title="Close">${closeIcon}</button></div></div><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
-      <div class="sm:col-span-4"><label class="${labelCls}" for="fullname">Full name</label><input id="fullname" class="${field}" placeholder="Last, First, Middle" value="${esc(r.name||'')}" required oninput="clearFormError()"><p id="form-error" class="mt-1 hidden text-xs font-medium text-red-600" role="alert"></p></div>
+      ${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<div class="sm:col-span-2"><label class="${labelCls}" for="${k}name">${l}</label><input id="${k}name" class="${field}" placeholder="${l}" value="${esc(nm[k])}" ${k!=='middle'?'required':''} oninput="clearFormError()"></div>`).join('')}
+      <p id="form-error" class="hidden text-xs font-medium text-red-600 sm:col-span-6 sm:-mt-3" role="alert"></p>
       <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
-      <div id="spouse-wrap" class="sm:col-span-4 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><label id="spouse-label" class="${labelCls}" for="spouse">${spouseLabel(r.sex)}</label><input id="spouse" class="${field}" placeholder="Last, First, Middle" value="${esc(r.spouse||'')}"></div>
+      <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}">`).join('')}</div></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
@@ -344,12 +363,12 @@ function survey(){
 
 function saveSurvey(){
   const val=id=>(document.getElementById(id)||{}).value||'';
-  const name=val('fullname').trim();
-  if(!name)return;
+  const name=joinName(val('lastname'),val('firstname'),val('middlename'));
+  if(!val('lastname').trim()||!val('firstname').trim())return;
   if(residents.some((r,i)=>i!==editIndex&&normName(r.name)===normName(name))){
     const error=document.getElementById('form-error');
     if(error){error.textContent='A resident with this name already exists.';error.classList.remove('hidden')}
-    const input=document.getElementById('fullname');
+    const input=document.getElementById('lastname');
     if(input&&typeof input.focus==='function')input.focus();
     return;
   }
@@ -358,7 +377,7 @@ function saveSurvey(){
   const pwd=document.querySelector('input[name="pwd"]:checked');
   const aid=editIndex>=0?residents[editIndex].aid:'Pending';
   const id=editIndex>=0?residents[editIndex].id:makeId();
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',spouse:val('spouse').trim(),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),children:readChildren(),aid};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',spouse:joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),children:readChildren(),aid};
   if(editIndex>=0){
     residents[editIndex]=rec;
     persist();
