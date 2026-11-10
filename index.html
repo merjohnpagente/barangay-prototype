@@ -60,6 +60,39 @@ tailwind.config = {
 </script>
 <style>
   :root { color-scheme: light; }
+  html { scroll-behavior: smooth; }
+  @keyframes page-in { from { opacity: 0; transform: translateY(14px) scale(.99) } to { opacity: 1; transform: none } }
+  @keyframes reveal { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
+  @keyframes row-in { from { opacity: 0; transform: translateX(-12px) } to { opacity: 1; transform: none } }
+  @keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes fade-out { to { opacity: 0 } }
+  @keyframes pop-in { from { opacity: 0; transform: translateY(20px) scale(.94) } to { opacity: 1; transform: none } }
+  @keyframes pop-out { to { opacity: 0; transform: translateY(12px) scale(.96) } }
+  @keyframes slide-out { to { transform: translateX(-100%) } }
+  @keyframes toast-out { to { opacity: 0; transform: translateY(14px) scale(.96) } }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(22px) scale(.9) } to { opacity: 1; transform: none } }
+  @keyframes drift { from { transform: translate3d(0,0,0) scale(1) } to { transform: translate3d(48px,-34px,0) scale(1.14) } }
+  main .animate-fade-up { animation: page-in 460ms cubic-bezier(.22,1,.36,1) both; }
+  .reveal { animation: reveal 560ms cubic-bezier(.22,1,.36,1) both; animation-delay: var(--d, 0ms); }
+  .row-in { animation: row-in 420ms cubic-bezier(.22,1,.36,1) both; animation-delay: var(--d, 0ms); }
+  .toast-in { animation: toast-in 380ms cubic-bezier(.34,1.56,.64,1) both; }
+  .animate-drift { animation: drift 16s ease-in-out infinite alternate; }
+  #modal-root > div { animation: fade-in 220ms ease-out both; }
+  #modal-root > div > * { animation: pop-in 340ms cubic-bezier(.34,1.4,.64,1) both; }
+  #modal-root > div.is-closing { animation: fade-out 170ms ease-in forwards; }
+  #modal-root > div.is-closing > * { animation: pop-out 170ms ease-in forwards; }
+  #mobile-menu:not(.hidden) { animation: fade-in 200ms ease-out both; }
+  #mobile-menu.is-closing { animation: fade-out 200ms ease-in forwards; }
+  #mobile-menu.is-closing aside { animation: slide-out 200ms cubic-bezier(.4,0,1,1) forwards; }
+  button, a, select, input, textarea { transition: background-color .2s, border-color .2s, color .2s, box-shadow .2s, transform .15s; }
+  button:not(:disabled):active { transform: scale(.96); }
+  input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 4px rgba(31,90,76,.12); }
+  tbody tr { transition: background-color .15s; }
+  .hover-lift { transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s, border-color .3s; }
+  .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -14px rgba(17,52,44,.28); border-color: #c3ddd2; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
   #print-root { display: none; }
   @media print {
     @page { size: A4 portrait; margin: 12mm; }
@@ -74,6 +107,6 @@ tailwind.config = {
 </head>
 <body class="h-full bg-cream font-sans text-slate-900 antialiased">
 <div id="app"></div>
-<script src="script.js?v=20261110-1"></script>
+<script src="script.js?v=20261111-1"></script>
 </body>
 </html>

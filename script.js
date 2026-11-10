@@ -124,7 +124,7 @@ const btn='inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2.
 const btnPrimary=`${btn} bg-pine-700 text-white hover:bg-pine-800`;
 const btnGhost=`${btn} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`;
 const statCard=(n,l)=>`<div class="rounded-xl border border-slate-200 bg-white p-5"><p class="text-sm text-slate-500">${l}</p><p class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">${n}</p></div>`;
-const dashStat=(n,l,cap,icon,tone)=>`<div class="rounded-2xl border border-slate-200 bg-white p-5"><div class="flex items-start justify-between gap-3"><p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">${l}</p><span class="${tone}" aria-hidden="true">${icon}</span></div><p class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">${n}</p><p class="mt-1 text-xs text-slate-500">${cap}</p></div>`;
+const dashStat=(n,l,cap,icon,tone)=>`<div class="hover-lift rounded-2xl border border-slate-200 bg-white p-5"><div class="flex items-start justify-between gap-3"><p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">${l}</p><span class="${tone}" aria-hidden="true">${icon}</span></div><p data-count class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">${n}</p><p class="mt-1 text-xs text-slate-500">${cap}</p></div>`;
 
 const usersIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 const heartIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>`;
@@ -190,6 +190,40 @@ function draw(){
   document.getElementById('app').innerHTML=views[v]();
   animateNext=false;
   renderModal();
+  fx();
+}
+const reduceMotion=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fx(){
+  const root=document.getElementById('app');
+  if(!root||reduceMotion())return;
+  let i=0;
+  root.querySelectorAll('main .rounded-xl, main .rounded-2xl').forEach(el=>{
+    if(el.parentElement.closest('.rounded-xl, .rounded-2xl'))return;
+    el.classList.add('reveal');el.style.setProperty('--d',Math.min(i++*70,560)+'ms');
+  });
+  root.querySelectorAll('main tbody tr').forEach((tr,n)=>{
+    if(n>13)return;
+    tr.classList.add('row-in');tr.style.setProperty('--d',(220+n*35)+'ms');
+  });
+  root.querySelectorAll('[data-count]').forEach((el,n)=>{
+    const end=parseInt(el.textContent,10);
+    if(!isFinite(end)||end<1)return;
+    const t0=performance.now()+120+n*60,dur=900;
+    el.textContent='0';
+    const tick=now=>{
+      const p=Math.min(1,Math.max(0,(now-t0)/dur));
+      el.textContent=Math.round(end*(p===1?1:1-Math.pow(2,-10*p)));
+      if(p<1)requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+function animClose(fn){
+  const m=document.querySelector('#modal-root > div');
+  if(!m||reduceMotion()){fn();return}
+  if(m.classList.contains('is-closing'))return;
+  m.classList.add('is-closing');
+  setTimeout(fn,170);
 }
 function renderModal(){
   let el=document.getElementById('modal-root');
@@ -203,14 +237,14 @@ function go(k){
 }
 function editResident(i){editIndex=i;v='survey';animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;draw()}
 function openResident(i){viewIndex=i;renderModal()}
-function closeResident(){viewIndex=-1;renderModal()}
+function closeResident(){animClose(()=>{viewIndex=-1;renderModal()})}
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   if(deleteIndex>=0)closeDelete();
   else if(viewIndex>=0)closeResident();
 });
 function askDelete(i){deleteIndex=i;renderModal()}
-function closeDelete(){deleteIndex=-1;renderModal()}
+function closeDelete(){animClose(()=>{deleteIndex=-1;renderModal()})}
 function confirmDelete(){
   const r=residents[deleteIndex];
   if(!r){closeDelete();return}
@@ -281,22 +315,29 @@ function flash(m){
   toast=m;
   let el=document.getElementById('toast');
   if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el)}
-  el.innerHTML=`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="animate-fade-up rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${esc(m)}</div></div>`;
+  el.innerHTML=`<div class="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"><div role="status" aria-live="polite" class="toast-in rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white">${esc(m)}</div></div>`;
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>{toast='';el.innerHTML=''},1800);
+  toastTimer=setTimeout(()=>{
+    const t=el.querySelector('[role=status]');
+    if(t)t.style.animation='toast-out 300ms ease-in forwards';
+    toastTimer=setTimeout(()=>{toast='';el.innerHTML=''},300);
+  },1700);
 }
 function toggleMenu(){
   const panel=document.getElementById('mobile-menu');
   const button=document.getElementById('menu-btn');
   if(!panel)return;
   const opening=panel.classList.contains('hidden');
-  panel.classList.toggle('hidden',!opening);
   if(button)button.setAttribute('aria-expanded',String(opening));
+  if(opening||reduceMotion()){panel.classList.toggle('hidden',!opening);return}
+  if(panel.classList.contains('is-closing'))return;
+  panel.classList.add('is-closing');
+  setTimeout(()=>{panel.classList.add('hidden');panel.classList.remove('is-closing')},200);
 }
 
 function login(){
   return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
-  <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px]"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px]"></div></div>
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
   <div class="relative z-10 w-full max-w-md ${animateNext?'animate-fade-up':''} rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
     <div class="text-center"><div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="Barangay Migcanaway seal" class="h-16 w-16 rounded-full object-cover ring-1 ring-slate-200 sm:h-20 sm:w-20"><img src="assets/tangub-logo.jpg" alt="Tangub City seal" class="h-16 w-16 object-contain sm:h-20 sm:w-20"></div><p class="mt-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
