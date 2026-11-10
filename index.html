@@ -60,10 +60,20 @@ tailwind.config = {
 </script>
 <style>
   :root { color-scheme: light; }
+  #print-root { display: none; }
+  @media print {
+    @page { size: A4 portrait; margin: 12mm; }
+    body.print-residents #app { display: none !important; }
+    body.print-residents #print-root { display: block; }
+    body.print-residents { background: #fff; }
+    #print-root thead { display: table-header-group; }
+    #print-root tr { break-inside: avoid; }
+    #print-root * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 </head>
 <body class="h-full bg-cream font-sans text-slate-900 antialiased">
 <div id="app"></div>
-<script src="script.js?v=20261109-2"></script>
+<script src="script.js?v=20261110-1"></script>
 </body>
 </html>

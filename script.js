@@ -97,6 +97,7 @@ const heartIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const checkIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>`;
 const clockIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
 const menuIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-5 w-5" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
+const printIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>`;
 const closeIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-4 w-4" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12"/></svg>`;
 const logoutIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M15 12H3m0 0 3-3m-3 3 3 3M10 5V3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-9v-2"/></svg>`;
 
@@ -392,6 +393,24 @@ function syncAge(){
   if(input)input.value=a;
 }
 
+function printResidents(){
+  const list=[...residents].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base'}));
+  const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const th=h=>`<th class="border border-slate-400 bg-slate-100 px-2 py-1.5 text-left font-semibold">${h}</th>`;
+  const td=(c,cls='')=>`<td class="border border-slate-300 px-2 py-1.5 ${cls}">${esc(c)}</td>`;
+  const rows=list.map((r,i)=>`<tr>${td(i+1,'text-center')}${td(r.id||'')}${td(r.name)}${td(r.purok||'')}${td(ageOf(r),'text-center')}${td(r.sex||'')}${td(r.civil||'')}${td(r.job||'')}${td(r.pwd||'','text-center')}</tr>`).join('');
+  let root=document.getElementById('print-root');
+  if(!root){root=document.createElement('div');root.id='print-root';document.body.appendChild(root)}
+  root.innerHTML=`<div class="p-2 text-slate-900">
+    <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
+    <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong></span><span>Printed on ${date}</span></p>
+    <table class="mt-2 w-full border-collapse text-xs"><thead>${['No.','ID','Name','Purok','Age','Sex','Civil status','Work','PWD'].map(th).join('')}</thead><tbody>${rows}</tbody></table>
+  </div>`;
+  document.body.classList.add('print-residents');
+  const done=()=>{document.body.classList.remove('print-residents');root.innerHTML='';window.removeEventListener('afterprint',done)};
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>window.print(),50);
+}
 function recordsCard(){
   const needle=q.trim().toLowerCase();
   const filtered=residents.map((r,i)=>({r,i})).filter(({r})=>
@@ -414,7 +433,7 @@ function recordsCard(){
   <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`;
 }
 function recs(){
-  const actions=`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
+  const actions=`<button type="button" class="${btnGhost}" onclick="printResidents()">${printIcon}Print</button><button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   return shell('Resident Records','Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
       <input id="search" type="search" class="${field}" placeholder="Search name or ID..." aria-label="Search residents by name or ID" value="${esc(q)}" enterkeyhint="search" oninput="setSearch(this.value)"><button type="submit" class="${btnGhost} shrink-0">Search</button>
