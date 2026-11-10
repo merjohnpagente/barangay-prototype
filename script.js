@@ -248,7 +248,7 @@ function login(){
 }
 
 function dashboard(){
-  const recent=residents.slice(0,5);
+  const recent=residents.slice(0,5).sort((a,b)=>String(a.id||'').localeCompare(String(b.id||''),undefined,{numeric:true}));
   const hour=new Date().getHours(),greeting=hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
   const today=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const pending=residents.filter(r=>r.aid==='Pending').slice(0,4).map(r=>[r.name,r.need||'Assistance']);
