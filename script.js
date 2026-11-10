@@ -1,4 +1,5 @@
 const puroks=['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5'];
+const pwdTypes=['Visual disability','Hearing disability','Speech and language impairment','Physical / orthopedic disability','Intellectual disability','Learning disability','Mental / psychosocial disability','Chronic illness','Rare disease','Cancer','Multiple disabilities','Others'];
 const pat=[['Yes'],['No'],['Yes'],['No'],['No']];
 const AUTH_KEY='barangay-session-v1';
 const VIEWS=['dashboard','records','survey'];
@@ -283,7 +284,7 @@ function setPage(n){page=n;renderRecords()}
 function exportCsv(){
   const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
   const kidsText=r=>(Array.isArray(r.children)?r.children:[]).map(childView).map(c=>`${c.name} (${c.age===''||c.age==null?'age n/a':c.age+' yrs'}, ${c.here==='No'?'Non-resident':'Resident'})`).join('; ');
-  const rows=[['ID','Name','Age','Age Group','Birthdate','Sex','Civil Status','Spouse','Children','Household Members','Contact Number','Work','Employment Status','Registered Voter','4Ps Beneficiary','Purok','PWD','Remarks'],...[...residents].sort((x,y)=>String(x.name||'').localeCompare(String(y.name||''),undefined,{sensitivity:'base'})).map(r=>[r.id||'',r.name,ageOf(r),ageGroup(r),r.birthday?fmtDate(r.birthday):'',r.sex||'',r.civil||'',spouseName(r),kidsText(r),householdOf(r).map(h=>`${h.res.name} (${h.rel})`).join('; '),r.contact||'',r.job||'',r.employment||'',r.voter||'',r.fourPs||'',r.purok||'',r.pwd||'',r.remarks||''])];
+  const rows=[['ID','Name','Age','Age Group','Birthdate','Sex','Civil Status','Spouse','Children','Household Members','Contact Number','Work','Employment Status','Registered Voter','4Ps Beneficiary','Purok','PWD','PWD Type','PWD ID Number','Remarks'],...[...residents].sort((x,y)=>String(x.name||'').localeCompare(String(y.name||''),undefined,{sensitivity:'base'})).map(r=>[r.id||'',r.name,ageOf(r),ageGroup(r),r.birthday?fmtDate(r.birthday):'',r.sex||'',r.civil||'',spouseName(r),kidsText(r),householdOf(r).map(h=>`${h.res.name} (${h.rel})`).join('; '),r.contact||'',r.job||'',r.employment||'',r.voter||'',r.fourPs||'',r.purok||'',r.pwd||'',r.pwd==='Yes'?(r.pwdType||''):'',r.pwd==='Yes'?(r.pwdId||''):'',r.remarks||''])];
   const csv=rows.map(row=>row.map(cell).join(',')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
@@ -450,7 +451,7 @@ function residentModal(){
   return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)closeResident()" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="closeResident()" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
-    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r)===''?'':ageOf(r)+(ageGroup(r)?' · '+ageGroup(r):''))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||spouseName(r)?row(spouseLabel(r.sex),spouseName(r)):''}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Purok',r.purok)}${row('Contact',r.contact)}${row('Employment',r.employment)}${row('Registered voter',r.voter)}${row('4Ps beneficiary',r.fourPs)}</dl>
+    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r)===''?'':ageOf(r)+(ageGroup(r)?' · '+ageGroup(r):''))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||spouseName(r)?row(spouseLabel(r.sex),spouseName(r)):''}${row('Work',r.job)}${row('PWD',r.pwd)}${r.pwd==='Yes'?row('Type of PWD',r.pwdType)+row('PWD ID number',r.pwdId):''}${row('Purok',r.purok)}${row('Contact',r.contact)}${row('Employment',r.employment)}${row('Registered voter',r.voter)}${row('4Ps beneficiary',r.fourPs)}</dl>
     ${r.remarks?`<div class="mt-4"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Remarks</p><p class="mt-0.5 whitespace-pre-line text-sm text-slate-700">${esc(r.remarks)}</p></div>`:''}
     <div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Children</h3>${kids.length?`<span class="text-xs text-slate-500">${here} of ${kids.length} resident${kids.length>1?'s':''}</span>`:''}</div><ul class="mt-1 divide-y divide-slate-100">${kidList}</ul></div>
     ${householdBlock(r)}
@@ -478,15 +479,16 @@ function survey(){
     </div></section>
     <section class="border-t border-slate-100 pt-8"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Children</h2></div><button type="button" class="${btnGhost}" onclick="addChildRow()">Add child</button></div><div id="children-list" class="mt-5 space-y-3">${(Array.isArray(r.children)?r.children:[]).map(childRow).join('')}</div></section>
     <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Other information</h2><p class="mt-0.5 text-xs text-slate-500">Contact, employment, voter and program details, plus notes.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
-      <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" ${r.pwd==='No'?'checked':''}>No</label></div></div>
+      <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" onchange="syncPwd()" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" onchange="syncPwd()" ${r.pwd==='No'?'checked':''}>No</label></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="contact">Contact number</label><input id="contact" type="tel" inputmode="tel" class="${field}" placeholder="09XXXXXXXXX" pattern="(09|[+]639)[0-9]{9}" title="Use 09XXXXXXXXX or +639XXXXXXXXX" value="${esc(r.contact||'')}"></div>
+      <div id="pwd-extra" class="grid grid-cols-1 gap-x-4 gap-y-5 sm:col-span-6 sm:grid-cols-6 ${r.pwd==='Yes'?'':'hidden'}"><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-type">Type of PWD</label>${so(pwdTypes,r.pwdType).replace('<select','<select id="pwd-type"')}</div><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-id">PWD ID number</label><input id="pwd-id" class="${field}" placeholder="e.g. 10-4208-000-0000000" autocomplete="off" value="${esc(r.pwdId||'')}"></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="employment">Employment status</label>${so(['Employed','Self-employed','Unemployed','Student','Retired'],r.employment).replace('<select','<select id="employment"')}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${yn('voter',r.voter)}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">4Ps beneficiary</span>${yn('fourps',r.fourPs)}</div>
       <div class="sm:col-span-6"><label class="${labelCls}" for="remarks">Remarks</label><textarea id="remarks" class="${field} min-h-[6rem] resize-y" placeholder="Type notes here...">${esc(r.remarks||'')}</textarea></div>
     </div></section>
   </div>
-  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML=''">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':'Save resident'}</button></div>
+  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':'Save resident'}</button></div>
 </form>`);
 }
 
@@ -507,7 +509,7 @@ function saveSurvey(){
   const id=editIndex>=0?residents[editIndex].id:makeId();
   const finalAge=computedAge===''?Number(val('age'))||'':computedAge;
   const isMinor=finalAge!==''&&Number(finalAge)<18;
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:(document.querySelector('input[name="voter"]:checked')||{}).value||'',fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:(document.querySelector('input[name="voter"]:checked')||{}).value||'',fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
   if(editIndex>=0){
     residents[editIndex]=rec;
     linkSpouse(rec.uid,isMinor?'':val('spouse-link'));
@@ -534,6 +536,12 @@ function syncAge(){
   const input=document.getElementById('age');
   if(input)input.value=a;
   syncCivil();
+}
+function syncPwd(){
+  const yes=(document.querySelector('input[name="pwd"]:checked')||{}).value==='Yes';
+  const box=document.getElementById('pwd-extra');
+  if(box)box.classList.toggle('hidden',!yes);
+  if(!yes){const t=document.getElementById('pwd-type'),i=document.getElementById('pwd-id');if(t)t.value='';if(i)i.value=''}
 }
 function syncCivil(){
   const v=((document.getElementById('age')||{}).value||'').trim();
