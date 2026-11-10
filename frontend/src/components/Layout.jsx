@@ -173,7 +173,7 @@ export default function Layout({ user, onLogout }) {
       </aside>
 
       <div className="relative z-10 lg:pl-64 print:pl-0">
-        <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-10 lg:py-12 print:max-w-none print:p-0">
+        <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:max-w-none lg:px-8 lg:py-10 xl:max-w-[1400px] 2xl:max-w-[1700px] print:max-w-none print:p-0">
           <Outlet />
         </main>
       </div>
