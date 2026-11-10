@@ -7,6 +7,7 @@ let animateNext=true;
 let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='';
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
+const newUid=()=>'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const names=['Santos, Maria Cruz','Reyes, Juan Dela Pena','Garcia, Ana Lopez','Bautista, Pedro Ramos','Mendoza, Rosa Flores','Villanueva, Jose Aquino','Castillo, Liza Navarro','Torres, Miguel Santiago','Dizon, Carmen Pascual','Ramos, Antonio Cruz'];
 const ages=[34,51,29,63,45,38,57,42,60,26];
 const jobs=['Farmer','Fisherman','Public school teacher','Sari-sari store owner','Tricycle driver','Carpenter','Nurse','Tailor','Electrician','Senior high student'];
@@ -22,7 +23,7 @@ const seedChildren={
 const seedSex={'Santos, Maria Cruz':'Female','Reyes, Juan Dela Pena':'Male','Garcia, Ana Lopez':'Female','Bautista, Pedro Ramos':'Male','Mendoza, Rosa Flores':'Female','Villanueva, Jose Aquino':'Male','Castillo, Liza Navarro':'Female','Torres, Miguel Santiago':'Male','Dizon, Carmen Pascual':'Female','Ramos, Antonio Cruz':'Male'};
 const seedSpouse={'Santos, Maria Cruz':'Santos, Roberto Cruz','Reyes, Juan Dela Pena':'Reyes, Elena Dela Pena','Mendoza, Rosa Flores':'Mendoza, Carlos Flores','Torres, Miguel Santiago':'Torres, Gina Santiago'};
 const birthdays=ages.map((age,i)=>`${2026-age}-${String((i%10)+1).padStart(2,'0')}-${String((i*2)%27+1).padStart(2,'0')}`);
-const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,name,age:ages[i],ageYear:2026,birthday:birthdays[i],civil:civils[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],children:seedChildren[name]||[],sex:seedSex[name]||'',spouse:seedSpouse[name]||''}));
+const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,uid:'seed-'+(i+1),name,age:ages[i],ageYear:2026,birthday:birthdays[i],civil:civils[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],children:seedChildren[name]||[],sex:seedSex[name]||'',spouse:seedSpouse[name]||''}));
 const renumber=list=>{
   let changed=false;
   [...list].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base'})).forEach((r,i)=>{
@@ -41,6 +42,7 @@ let residents=(()=>{
     let nextId=saved.reduce((m,r)=>Math.max(m,Number(String(r.id||'').replace(/\D/g,''))||0),0)+1;
     saved.forEach(r=>{
       if(!r.id){r.id=`R-${String(nextId++).padStart(3,'0')}`;changed=true}
+      if(!r.uid){r.uid=newUid();changed=true}
       if(!r.civil){r.civil='Single';changed=true}
       if(!Array.isArray(r.children)){r.children=seedChildren[r.name]||[];changed=true}
       if(r.spouse===undefined){r.spouse=seedSpouse[r.name]||'';changed=true}
@@ -81,6 +83,38 @@ const ageOf=r=>{
   const y=new Date().getFullYear();
   return Number(r.age||0)+Math.max(0,y-(Number(r.ageYear)||y));
 };
+const ageGroup=r=>{const a=ageOf(r);if(a===''||a==null||isNaN(Number(a)))return '';return a<18?'Bata':a>=60?'Senior Citizen':'Adult'};
+const ageCounts=(list=residents)=>{const c={'Bata':0,'Adult':0,'Senior Citizen':0};list.forEach(r=>{const g=ageGroup(r);if(g)c[g]++});return c};
+const byUid=u=>u?residents.find(r=>r.uid===u):undefined;
+const childView=c=>{const l=byUid(c.uid);return l?{...c,name:l.name,age:ageOf(l),here:'Yes',linked:true}:c};
+const spouseName=r=>{const l=byUid(r.spouseUid);return l?l.name:(r.spouse||'')};
+const householdOf=r=>{
+  const out=new Map();
+  const add=(x,rel)=>{if(x&&x.uid!==r.uid&&!out.has(x.uid))out.set(x.uid,{res:x,rel})};
+  const kidsOf=p=>(Array.isArray(p.children)?p.children:[]).map(c=>byUid(c.uid)).filter(Boolean);
+  const parents=residents.filter(p=>(Array.isArray(p.children)?p.children:[]).some(c=>c.uid&&c.uid===r.uid));
+  const sp=byUid(r.spouseUid);
+  add(sp,'Spouse');
+  parents.forEach(p=>{add(p,'Parent');add(byUid(p.spouseUid),'Parent')});
+  kidsOf(r).forEach(k=>add(k,'Child'));
+  if(sp)kidsOf(sp).forEach(k=>add(k,'Child'));
+  parents.forEach(p=>kidsOf(p).forEach(k=>add(k,'Sibling')));
+  return [...out.values()];
+};
+function linkSpouse(uid,spouseUid){
+  const me=byUid(uid);
+  if(!me)return;
+  const oldSp=byUid(me.spouseUid);
+  if(oldSp&&oldSp.spouseUid===uid)oldSp.spouseUid='';
+  me.spouseUid='';
+  const sp=byUid(spouseUid);
+  if(!sp||sp.uid===uid)return;
+  const spOld=byUid(sp.spouseUid);
+  if(spOld&&spOld.spouseUid===sp.uid)spOld.spouseUid='';
+  sp.spouseUid=uid;sp.spouse=me.name;
+  me.spouseUid=sp.uid;me.spouse=sp.name;
+}
+const ageDash=()=>{const c=ageCounts();return [['Bata','0–17 years','text-sky-600'],['Adult','18–59 years','text-pine-700'],['Senior Citizen','60 years and above','text-amber-500']].map(([k,cap,tone])=>dashStat(c[k],k,cap,usersIcon,tone)).join('')};
 const summary=()=>({total:residents.length,pwd:residents.filter(r=>r.pwd==='Yes').length});
 const saveResident=rec=>{residents.unshift(rec);persist()};
 
@@ -180,6 +214,10 @@ function closeDelete(){deleteIndex=-1;renderModal()}
 function confirmDelete(){
   const r=residents[deleteIndex];
   if(!r){closeDelete();return}
+  residents.forEach(o=>{
+    if(o.spouseUid===r.uid)o.spouseUid='';
+    if(Array.isArray(o.children))o.children=o.children.map(c=>c.uid===r.uid?{name:r.name,age:ageOf(r),here:'Yes'}:c);
+  });
   residents.splice(deleteIndex,1);
   persist();
   deleteIndex=-1;viewIndex=-1;
@@ -210,7 +248,8 @@ function setPurok(value){purokBy=value;page=1;renderRecords()}
 function setPage(n){page=n;renderRecords()}
 function exportCsv(){
   const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
-  const rows=[['ID','Name','Age','Birthdate','Sex','Civil Status','Work','Purok','PWD','Remarks'],...residents.map(r=>[r.id||'',r.name,ageOf(r),r.birthday||'',r.sex||'',r.civil||'',r.job||'',r.purok||'',r.pwd||'',r.remarks||''])];
+  const kidsText=r=>(Array.isArray(r.children)?r.children:[]).map(childView).map(c=>`${c.name} (${c.age===''||c.age==null?'age n/a':c.age+' yrs'}, ${c.here==='No'?'Non-resident':'Resident'})`).join('; ');
+  const rows=[['ID','Name','Age','Age Group','Birthdate','Sex','Civil Status','Spouse','Children','Household Members','Contact Number','Work','Employment Status','Registered Voter','4Ps Beneficiary','Purok','PWD','Remarks'],...residents.map(r=>[r.id||'',r.name,ageOf(r),ageGroup(r),r.birthday||'',r.sex||'',r.civil||'',spouseName(r),kidsText(r),householdOf(r).map(h=>`${h.res.name} (${h.rel})`).join('; '),r.contact||'',r.job||'',r.employment||'',r.voter||'',r.fourPs||'',r.purok||'',r.pwd||'',r.remarks||''])];
   const csv=rows.map(row=>row.map(cell).join(',')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
@@ -284,6 +323,7 @@ function dashboard(){
     <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview · Tangub City</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's an overview of the resident records today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('records')">View residents</button></div></div>
   </section>
   <div class="grid grid-cols-2 gap-3">${stats.map(([n,l,cap,icon,tone])=>dashStat(n,l,cap,icon,tone)).join('')}</div>
+  <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">${ageDash()}</div>
   <div class="mt-3 grid gap-3 lg:grid-cols-5">
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white lg:col-span-3">
       <div class="flex items-start justify-between gap-3 px-5 py-4"><div><h2 class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">Recent residents</h2><p class="mt-1 text-xs text-slate-500">Latest profiles added to the record.</p></div><button type="button" onclick="go('records')" class="rounded-lg px-2 py-1.5 text-xs font-medium text-pine-700 transition-colors hover:bg-pine-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">View all</button></div>
@@ -293,12 +333,30 @@ function dashboard(){
   </div>`);
 }
 
-const childRow=(c={})=>`<div class="child-row grid grid-cols-12 items-center gap-2">
-  <input class="child-name ${field} col-span-12 sm:col-span-4" placeholder="Child's full name" aria-label="Child's full name" value="${esc(c.name||'')}">
-  <input type="number" min="0" max="120" class="child-age ${field} col-span-4 sm:col-span-2" placeholder="Age" aria-label="Child's age" value="${esc(c.age??'')}">
-  <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Resident of Barangay Migcanaway or not"><option value="Yes" ${c.here!=='No'?'selected':''}>Resident</option><option value="No" ${c.here==='No'?'selected':''}>Non-resident</option></select>
+const residentOptions=(selected,exclude)=>residents.filter(x=>x.uid&&x.uid!==exclude).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),undefined,{sensitivity:'base'})).map(x=>`<option value="${esc(x.uid)}" ${x.uid===selected?'selected':''}>${esc(x.name)} (${esc(x.id||'')})</option>`).join('');
+const selfUid=()=>editIndex>=0&&residents[editIndex]?residents[editIndex].uid:'';
+const yn=(name,cur)=>`<div class="flex gap-6 pt-2">${['Yes','No'].map(x=>`<label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="${name}" value="${x}" class="h-4 w-4 accent-pine-700" ${cur===x?'checked':''}>${x}</label>`).join('')}</div>`;
+const childRow=(c={})=>{
+  const cv=childView(c),linked=!!cv.linked;
+  return `<div class="child-row grid grid-cols-12 items-center gap-2">
+  <select class="child-link ${field} col-span-12" aria-label="Link child to a resident already in the system" onchange="linkChild(this)"><option value="">New child — type details below</option>${residentOptions(linked?c.uid:'',selfUid())}</select>
+  <input class="child-name ${field} col-span-12 sm:col-span-4" placeholder="Child's full name" aria-label="Child's full name" value="${esc(cv.name||'')}" ${linked?'readonly':''}>
+  <input type="number" min="0" max="120" class="child-age ${field} col-span-4 sm:col-span-2" placeholder="Age" aria-label="Child's age" value="${esc(cv.age??'')}" ${linked?'readonly':''}>
+  <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Resident of Barangay Migcanaway or not" ${linked?'disabled':''}><option value="Yes" ${cv.here!=='No'?'selected':''}>Resident</option><option value="No" ${cv.here==='No'?'selected':''}>Non-resident</option></select>
   <button type="button" onclick="this.closest('.child-row').remove()" class="col-span-12 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:col-span-3" aria-label="Remove this child" title="Remove this child">${closeIcon}<span>Remove</span></button>
 </div>`;
+};
+function linkChild(sel){
+  const row=sel.closest('.child-row'),l=byUid(sel.value);
+  const name=row.querySelector('.child-name'),age=row.querySelector('.child-age'),here=row.querySelector('.child-here');
+  if(l){name.value=l.name;age.value=ageOf(l);here.value='Yes';name.readOnly=true;age.readOnly=true;here.disabled=true}
+  else{name.readOnly=false;age.readOnly=false;here.disabled=false}
+}
+function linkSpouseSel(sel){
+  const l=byUid(sel.value),set=(k,v,ro)=>{const e=document.getElementById('spouse-'+k);if(e){if(v!==null)e.value=v;e.readOnly=ro}};
+  if(l){const n=splitName(l.name);set('last',n.last,true);set('first',n.first,true);set('middle',n.middle,true)}
+  else{['last','first','middle'].forEach(k=>set(k,null,false))}
+}
 function splitName(str){
   const t=String(str||'').trim();
   if(!t)return {last:'',first:'',middle:''};
@@ -331,24 +389,30 @@ function addChildRow(){
 }
 function readChildren(){
   return [...document.querySelectorAll('.child-row')].map(row=>{
-    const age=row.querySelector('.child-age').value;
-    return {name:row.querySelector('.child-name').value.trim(),age:age===''?'':Number(age),here:row.querySelector('.child-here').value==='No'?'No':'Yes'};
+    const age=row.querySelector('.child-age').value,uid=row.querySelector('.child-link').value;
+    return {name:row.querySelector('.child-name').value.trim(),age:age===''?'':Number(age),here:row.querySelector('.child-here').value==='No'?'No':'Yes',...(uid?{uid}:{})};
   }).filter(c=>c.name);
 }
+const householdBlock=r=>{
+  const hh=householdOf(r);
+  if(!hh.length)return '';
+  return `<div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Household</h3><span class="text-xs text-slate-500">${hh.length+1} members</span></div><ul class="mt-1 divide-y divide-slate-100">${hh.map(({res,rel})=>`<li class="flex items-center justify-between gap-3 py-2.5"><button type="button" onclick="openResident(${residents.indexOf(res)})" class="min-w-0 truncate text-left text-sm font-medium text-pine-700 hover:underline">${esc(res.name)}</button><span class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">${rel}</span></li>`).join('')}</ul></div>`;
+};
 const spouseLabel=sex=>sex==='Female'?'Husband':sex==='Male'?'Wife':'Spouse';
 function residentModal(){
   const r=residents[viewIndex];
   if(viewIndex<0||!r)return '';
-  const kids=Array.isArray(r.children)?r.children:[];
+  const kids=(Array.isArray(r.children)?r.children:[]).map(childView);
   const row=(l,val)=>`<div><dt class="text-[11px] font-medium uppercase tracking-wide text-slate-400">${l}</dt><dd class="mt-0.5 text-sm text-slate-800">${val===''||val==null?'—':esc(val)}</dd></div>`;
   const here=kids.filter(c=>c.here!=='No').length;
-  const kidList=kids.length?kids.map(c=>`<li class="flex items-center justify-between gap-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-900">${esc(c.name)}</p><p class="text-xs text-slate-500">${c.age===''||c.age==null?'Age not recorded':esc(c.age)+' years old'}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${c.here==='No'?'bg-amber-50 text-amber-700':'bg-emerald-50 text-emerald-700'}">${c.here==='No'?'Non-resident':'Resident'}</span></li>`).join(''):`<li class="py-3 text-sm text-slate-500">No children recorded.</li>`;
+  const kidList=kids.length?kids.map(c=>`<li class="flex items-center justify-between gap-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-900">${esc(c.name)}</p><p class="text-xs text-slate-500">${c.age===''||c.age==null?'Age not recorded':esc(c.age)+' years old'}${c.linked?' · In system':''}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${c.here==='No'?'bg-amber-50 text-amber-700':'bg-emerald-50 text-emerald-700'}">${c.here==='No'?'Non-resident':'Resident'}</span></li>`).join(''):`<li class="py-3 text-sm text-slate-500">No children recorded.</li>`;
   return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)closeResident()" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="closeResident()" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
-    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||r.spouse?row(spouseLabel(r.sex),r.spouse):''}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Purok',r.purok)}</dl>
+    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r)===''?'':ageOf(r)+(ageGroup(r)?' · '+ageGroup(r):''))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||spouseName(r)?row(spouseLabel(r.sex),spouseName(r)):''}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Purok',r.purok)}${row('Contact',r.contact)}${row('Employment',r.employment)}${row('Registered voter',r.voter)}${row('4Ps beneficiary',r.fourPs)}</dl>
     ${r.remarks?`<div class="mt-4"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Remarks</p><p class="mt-0.5 whitespace-pre-line text-sm text-slate-700">${esc(r.remarks)}</p></div>`:''}
     <div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Children</h3>${kids.length?`<span class="text-xs text-slate-500">${here} of ${kids.length} resident${kids.length>1?'s':''}</span>`:''}</div><ul class="mt-1 divide-y divide-slate-100">${kidList}</ul></div>
+    ${householdBlock(r)}
     <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDelete(${viewIndex})">Delete</button><button type="button" class="${btnPrimary}" onclick="editResident(${viewIndex})">Edit</button></div>
   </div></div>`;
 }
@@ -356,7 +420,7 @@ function residentModal(){
 function survey(){
   const editing=editIndex>=0;
   const r=editing?residents[editIndex]:{};
-  const nm=splitName(r.name),sp=splitName(r.spouse);
+  const nm=splitName(r.name),sp=splitName(spouseName(r)),spLinked=!!byUid(r.spouseUid);
   const so=(a,selected='')=>`<select class="${field}"><option value="">Select</option>${a.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}</select>`;
   return shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile.':'Add a resident to the survey record.',`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" onsubmit="event.preventDefault();saveSurvey()">
   <div class="space-y-8 p-5 sm:p-7">
@@ -367,13 +431,17 @@ function survey(){
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
-      <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}">`).join('')}</div></div>
+      <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><select id="spouse-link" class="${field} mb-3" aria-label="Link spouse already in the system" onchange="linkSpouseSel(this)"><option value="">Not in system — type name below</option>${residentOptions(spLinked?r.spouseUid:'',r.uid||'')}</select><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}" ${spLinked?'readonly':''}>`).join('')}</div></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
     <section class="border-t border-slate-100 pt-8"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Children</h2></div><button type="button" class="${btnGhost}" onclick="addChildRow()">Add child</button></div><div id="children-list" class="mt-5 space-y-3">${(Array.isArray(r.children)?r.children:[]).map(childRow).join('')}</div></section>
-    <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Other information</h2><p class="mt-0.5 text-xs text-slate-500">PWD status and notes for this resident.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
-      <div class="sm:col-span-6"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" ${r.pwd==='No'?'checked':''}>No</label></div></div>
+    <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Other information</h2><p class="mt-0.5 text-xs text-slate-500">Contact, employment, voter and program details, plus notes.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
+      <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" ${r.pwd==='No'?'checked':''}>No</label></div></div>
+      <div class="sm:col-span-3"><label class="${labelCls}" for="contact">Contact number</label><input id="contact" type="tel" inputmode="tel" class="${field}" placeholder="09XXXXXXXXX" pattern="(09|[+]639)[0-9]{9}" title="Use 09XXXXXXXXX or +639XXXXXXXXX" value="${esc(r.contact||'')}"></div>
+      <div class="sm:col-span-3"><label class="${labelCls}" for="employment">Employment status</label>${so(['Employed','Self-employed','Unemployed','Student','Retired'],r.employment).replace('<select','<select id="employment"')}</div>
+      <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${yn('voter',r.voter)}</div>
+      <div class="sm:col-span-3"><span class="${labelCls}">4Ps beneficiary</span>${yn('fourps',r.fourPs)}</div>
       <div class="sm:col-span-6"><label class="${labelCls}" for="remarks">Remarks</label><textarea id="remarks" class="${field} min-h-[6rem] resize-y" placeholder="Type notes here...">${esc(r.remarks||'')}</textarea></div>
     </div></section>
   </div>
@@ -396,15 +464,18 @@ function saveSurvey(){
   const computedAge=ageFromBirthday(birthday);
   const pwd=document.querySelector('input[name="pwd"]:checked');
   const id=editIndex>=0?residents[editIndex].id:makeId();
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',spouse:joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',remarks:val('remarks').trim(),children:readChildren()};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',spouse:joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:(document.querySelector('input[name="voter"]:checked')||{}).value||'',fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
   if(editIndex>=0){
     residents[editIndex]=rec;
+    linkSpouse(rec.uid,val('spouse-link'));
     persist();
     editIndex=-1;
     go('records');
     flash('Resident updated');
   } else {
     saveResident(rec);
+    linkSpouse(rec.uid,val('spouse-link'));
+    persist();
     draw();
     flash('Resident saved');
   }
@@ -423,7 +494,7 @@ function syncAge(){
 
 function printResidents(){
   const list=filteredResidents().map(({r})=>r);
-  const scope=[purokBy==='all'?'':purokBy,filterBy==='all'?'':filterBy==='pwd'?'PWD residents':filterBy,q.trim()?`“${q.trim()}”`:''].filter(Boolean).join(' · ');
+  const scope=[purokBy==='all'?'':purokBy,filterBy==='all'?'':filterBy==='pwd'?'PWD residents':filterBy.startsWith('age:')?filterBy.slice(4):filterBy,q.trim()?`“${q.trim()}”`:''].filter(Boolean).join(' · ');
   const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   const th=h=>`<th class="border border-slate-400 bg-slate-100 px-2 py-1.5 text-left font-semibold">${h}</th>`;
   const td=(c,cls='')=>`<td class="border border-slate-300 px-2 py-1.5 ${cls}">${esc(c)}</td>`;
@@ -432,7 +503,7 @@ function printResidents(){
   if(!root){root=document.createElement('div');root.id='print-root';document.body.appendChild(root)}
   root.innerHTML=`<div class="p-2 text-slate-900">
     <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents${scope?' · '+esc(scope):''}</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
-    <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong> · PWD: <strong>${list.filter(r=>r.pwd==='Yes').length}</strong></span><span>Printed on ${date}</span></p>
+    <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong> · PWD: <strong>${list.filter(r=>r.pwd==='Yes').length}</strong>${['Bata','Adult','Senior Citizen'].map(g=>` · ${g}: <strong>${list.filter(r=>ageGroup(r)===g).length}</strong>`).join('')}</span><span>Printed on ${date}</span></p>
     <table class="mt-2 w-full border-collapse text-xs"><thead>${['No.','ID','Name','Purok','Age','Sex','Civil status','Work','PWD'].map(th).join('')}</thead><tbody>${rows||'<tr><td colspan="9" class="border border-slate-300 px-2 py-4 text-center text-slate-500">No residents found.</td></tr>'}</tbody></table>
   </div>`;
   document.body.classList.add('print-residents');
@@ -444,7 +515,7 @@ function filteredResidents(){
   const needle=q.trim().toLowerCase();
   return residents.map((r,i)=>({r,i})).filter(({r})=>
     (!needle||r.name.toLowerCase().includes(needle)||String(r.id||'').toLowerCase().includes(needle)) &&
-    (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':r.civil===filterBy)) &&
+    (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':filterBy.startsWith('age:')?ageGroup(r)===filterBy.slice(4):r.civil===filterBy)) &&
     (purokBy==='all'||r.purok===purokBy)
   ).sort((a,b)=>a.r.name.localeCompare(b.r.name,undefined,{sensitivity:'base'}));
 }
@@ -478,6 +549,7 @@ function recs(){
     <select id="filter" class="${field} min-w-0 flex-1 sm:w-48 sm:flex-none" aria-label="Filter residents" onchange="setFilter(this.value)">
       <option value="all" ${filterBy==='all'?'selected':''}>All residents</option>
       <optgroup label="Civil status">${['Single','Married','Widowed','Separated','Annulled'].map(x=>`<option value="${x}" ${filterBy===x?'selected':''}>${x}</option>`).join('')}</optgroup>
+      <optgroup label="Age group">${[['Bata','Bata (0–17)'],['Adult','Adult (18–59)'],['Senior Citizen','Senior Citizen (60+)']].map(([k,l])=>`<option value="age:${k}" ${filterBy==='age:'+k?'selected':''}>${l}</option>`).join('')}</optgroup>
       <option value="pwd" ${filterBy==='pwd'?'selected':''}>PWD residents</option>
     </select>
     </div>
