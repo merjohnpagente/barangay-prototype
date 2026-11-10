@@ -393,8 +393,13 @@ function syncAge(){
   if(input)input.value=a;
 }
 
+let printPurok='all';
+function setPrintPurok(value){
+  printPurok=value;
+  document.querySelectorAll('.print-purok-select').forEach(el=>{el.value=value});
+}
 function printResidents(){
-  const list=[...residents].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base'}));
+  const list=residents.filter(r=>printPurok==='all'||r.purok===printPurok).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base'}));
   const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   const th=h=>`<th class="border border-slate-400 bg-slate-100 px-2 py-1.5 text-left font-semibold">${h}</th>`;
   const td=(c,cls='')=>`<td class="border border-slate-300 px-2 py-1.5 ${cls}">${esc(c)}</td>`;
@@ -402,9 +407,9 @@ function printResidents(){
   let root=document.getElementById('print-root');
   if(!root){root=document.createElement('div');root.id='print-root';document.body.appendChild(root)}
   root.innerHTML=`<div class="p-2 text-slate-900">
-    <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
+    <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents${printPurok==='all'?'':' · '+esc(printPurok)}</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
     <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong> · PWD: <strong>${list.filter(r=>r.pwd==='Yes').length}</strong></span><span>Printed on ${date}</span></p>
-    <table class="mt-2 w-full border-collapse text-xs"><thead>${['No.','ID','Name','Purok','Age','Sex','Civil status','Work','PWD'].map(th).join('')}</thead><tbody>${rows}</tbody></table>
+    <table class="mt-2 w-full border-collapse text-xs"><thead>${['No.','ID','Name','Purok','Age','Sex','Civil status','Work','PWD'].map(th).join('')}</thead><tbody>${rows||'<tr><td colspan="9" class="border border-slate-300 px-2 py-4 text-center text-slate-500">No residents found.</td></tr>'}</tbody></table>
   </div>`;
   document.body.classList.add('print-residents');
   const done=()=>{document.body.classList.remove('print-residents');root.innerHTML='';window.removeEventListener('afterprint',done)};
@@ -462,7 +467,7 @@ function reports(){
   return shell('Reports and Summary','A snapshot of the residents across the barangay.',`<div class="grid grid-cols-2 gap-3">${stats.map(([n,l])=>statCard(n,l)).join('')}</div>
   <div class="mt-3 grid gap-3 lg:grid-cols-5">
     <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-5"><h2 class="text-sm font-medium text-slate-900">Residents per Purok</h2><p class="mt-0.5 text-xs text-slate-500">Number of residents in each area.</p><div class="mt-8 flex h-40 items-end gap-3 sm:gap-4">${bars.map(([h,n],i)=>`<div class="relative flex h-full flex-1 items-end"><span class="absolute inset-x-0 -top-5 text-center text-[11px] font-medium text-slate-400">${n}</span><div class="w-full origin-bottom animate-grow-y rounded-t bg-pine-700" style="height:${h}%;animation-delay:${i*60}ms" title="Purok ${i+1}: ${n}"></div></div>`).join('')}</div><div class="mt-3 flex gap-3 border-t border-slate-100 pt-3 sm:gap-4">${bars.map((_,i)=>`<span class="flex-1 text-center text-[11px] text-slate-400">Purok ${i+1}</span>`).join('')}</div></section>
-  </div>`,`<button type="button" class="${btnGhost}" onclick="printResidents()">${printIcon}Print</button><button type="button" class="${btnPrimary}" onclick="exportCsv()">Export</button>`);
+  </div>`,`<select class="print-purok-select ${field} w-40" aria-label="Choose what to print" onchange="setPrintPurok(this.value)"><option value="all" ${printPurok==='all'?'selected':''}>All puroks</option>${puroks.map(x=>`<option value="${x}" ${printPurok===x?'selected':''}>${x}</option>`).join('')}</select><button type="button" class="${btnGhost}" onclick="printResidents()">${printIcon}Print</button><button type="button" class="${btnPrimary}" onclick="exportCsv()">Export</button>`);
 }
 
 draw();
