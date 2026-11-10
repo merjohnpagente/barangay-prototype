@@ -427,10 +427,10 @@ function survey(){
     <section><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p></div><div class="flex items-center gap-2">${editing?`<span class="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span>`:''}<button type="button" onclick="go('records')" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close and return to Residents" title="Close">${closeIcon}</button></div></div><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       ${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<div class="sm:col-span-2"><label class="${labelCls}" for="${k}name">${l}</label><input id="${k}name" class="${field}" placeholder="${l}" value="${esc(nm[k])}" ${k!=='middle'?'required':''} oninput="clearFormError()"></div>`).join('')}
       <p id="form-error" class="hidden text-xs font-medium text-red-600 sm:col-span-6 sm:-mt-3" role="alert"></p>
-      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}"></div>
+      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}" onchange="syncCivil()"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
-      <div class="sm:col-span-2"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
+      <div id="civil-wrap" class="sm:col-span-2 ${editing&&ageOf(r)!==''&&Number(ageOf(r))<18?'hidden':''}"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
       <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><select id="spouse-link" class="${field} mb-3" aria-label="Link spouse already in the system" onchange="linkSpouseSel(this)"><option value="">Not in system — type name below</option>${residentOptions(spLinked?r.spouseUid:'',r.uid||'')}</select><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}" ${spLinked?'readonly':''}>`).join('')}</div></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
@@ -464,17 +464,19 @@ function saveSurvey(){
   const computedAge=ageFromBirthday(birthday);
   const pwd=document.querySelector('input[name="pwd"]:checked');
   const id=editIndex>=0?residents[editIndex].id:makeId();
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',spouse:joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:(document.querySelector('input[name="voter"]:checked')||{}).value||'',fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
+  const finalAge=computedAge===''?Number(val('age'))||'':computedAge;
+  const isMinor=finalAge!==''&&Number(finalAge)<18;
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:(document.querySelector('input[name="voter"]:checked')||{}).value||'',fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
   if(editIndex>=0){
     residents[editIndex]=rec;
-    linkSpouse(rec.uid,val('spouse-link'));
+    linkSpouse(rec.uid,isMinor?'':val('spouse-link'));
     persist();
     editIndex=-1;
     go('records');
     flash('Resident updated');
   } else {
     saveResident(rec);
-    linkSpouse(rec.uid,val('spouse-link'));
+    linkSpouse(rec.uid,isMinor?'':val('spouse-link'));
     persist();
     draw();
     flash('Resident saved');
@@ -490,6 +492,18 @@ function syncAge(){
   if(a==='')return;
   const input=document.getElementById('age');
   if(input)input.value=a;
+  syncCivil();
+}
+function syncCivil(){
+  const v=((document.getElementById('age')||{}).value||'').trim();
+  const minor=v!==''&&Number(v)<18;
+  const wrap=document.getElementById('civil-wrap'),civil=document.getElementById('civil');
+  if(wrap)wrap.classList.toggle('hidden',minor);
+  if(minor){
+    if(civil)civil.value='Single';
+    const sp=document.getElementById('spouse-wrap');
+    if(sp)sp.classList.add('hidden');
+  } else syncSpouse();
 }
 
 function printResidents(){
