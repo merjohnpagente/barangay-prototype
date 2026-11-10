@@ -249,7 +249,7 @@ function setPage(n){page=n;renderRecords()}
 function exportCsv(){
   const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
   const kidsText=r=>(Array.isArray(r.children)?r.children:[]).map(childView).map(c=>`${c.name} (${c.age===''||c.age==null?'age n/a':c.age+' yrs'}, ${c.here==='No'?'Non-resident':'Resident'})`).join('; ');
-  const rows=[['ID','Name','Age','Age Group','Birthdate','Sex','Civil Status','Spouse','Children','Household Members','Contact Number','Work','Employment Status','Registered Voter','4Ps Beneficiary','Purok','PWD','Remarks'],...residents.map(r=>[r.id||'',r.name,ageOf(r),ageGroup(r),r.birthday||'',r.sex||'',r.civil||'',spouseName(r),kidsText(r),householdOf(r).map(h=>`${h.res.name} (${h.rel})`).join('; '),r.contact||'',r.job||'',r.employment||'',r.voter||'',r.fourPs||'',r.purok||'',r.pwd||'',r.remarks||''])];
+  const rows=[['ID','Name','Age','Age Group','Birthdate','Sex','Civil Status','Spouse','Children','Household Members','Contact Number','Work','Employment Status','Registered Voter','4Ps Beneficiary','Purok','PWD','Remarks'],...[...residents].sort((x,y)=>String(x.name||'').localeCompare(String(y.name||''),undefined,{sensitivity:'base'})).map(r=>[r.id||'',r.name,ageOf(r),ageGroup(r),r.birthday?fmtDate(r.birthday):'',r.sex||'',r.civil||'',spouseName(r),kidsText(r),householdOf(r).map(h=>`${h.res.name} (${h.rel})`).join('; '),r.contact||'',r.job||'',r.employment||'',r.voter||'',r.fourPs||'',r.purok||'',r.pwd||'',r.remarks||''])];
   const csv=rows.map(row=>row.map(cell).join(',')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
