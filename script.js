@@ -403,7 +403,7 @@ function printResidents(){
   if(!root){root=document.createElement('div');root.id='print-root';document.body.appendChild(root)}
   root.innerHTML=`<div class="p-2 text-slate-900">
     <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
-    <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong></span><span>Printed on ${date}</span></p>
+    <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong> · PWD: <strong>${list.filter(r=>r.pwd==='Yes').length}</strong></span><span>Printed on ${date}</span></p>
     <table class="mt-2 w-full border-collapse text-xs"><thead>${['No.','ID','Name','Purok','Age','Sex','Civil status','Work','PWD'].map(th).join('')}</thead><tbody>${rows}</tbody></table>
   </div>`;
   document.body.classList.add('print-residents');
@@ -433,7 +433,7 @@ function recordsCard(){
   <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`;
 }
 function recs(){
-  const actions=`<button type="button" class="${btnGhost}" onclick="printResidents()">${printIcon}Print</button><button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
+  const actions=`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   return shell('Resident Records','Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
       <input id="search" type="search" class="${field}" placeholder="Search name or ID..." aria-label="Search residents by name or ID" value="${esc(q)}" enterkeyhint="search" oninput="setSearch(this.value)"><button type="submit" class="${btnGhost} shrink-0">Search</button>
@@ -462,7 +462,7 @@ function reports(){
   return shell('Reports and Summary','A snapshot of the residents across the barangay.',`<div class="grid grid-cols-2 gap-3">${stats.map(([n,l])=>statCard(n,l)).join('')}</div>
   <div class="mt-3 grid gap-3 lg:grid-cols-5">
     <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-5"><h2 class="text-sm font-medium text-slate-900">Residents per Purok</h2><p class="mt-0.5 text-xs text-slate-500">Number of residents in each area.</p><div class="mt-8 flex h-40 items-end gap-3 sm:gap-4">${bars.map(([h,n],i)=>`<div class="relative flex h-full flex-1 items-end"><span class="absolute inset-x-0 -top-5 text-center text-[11px] font-medium text-slate-400">${n}</span><div class="w-full origin-bottom animate-grow-y rounded-t bg-pine-700" style="height:${h}%;animation-delay:${i*60}ms" title="Purok ${i+1}: ${n}"></div></div>`).join('')}</div><div class="mt-3 flex gap-3 border-t border-slate-100 pt-3 sm:gap-4">${bars.map((_,i)=>`<span class="flex-1 text-center text-[11px] text-slate-400">Purok ${i+1}</span>`).join('')}</div></section>
-  </div>`,`<button type="button" class="${btnGhost}" onclick="window.print()">Print</button><button type="button" class="${btnPrimary}" onclick="exportCsv()">Export</button>`);
+  </div>`,`<button type="button" class="${btnGhost}" onclick="printResidents()">${printIcon}Print</button><button type="button" class="${btnPrimary}" onclick="exportCsv()">Export</button>`);
 }
 
 draw();
