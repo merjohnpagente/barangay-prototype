@@ -132,7 +132,7 @@ function shell(title,subtitle,body,actions=''){
     <div class="border-t border-slate-200 p-3">${logoutBtn}</div>
   </aside>
   <div class="relative z-10 lg:pl-64 print:pl-0">
-    <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-10 lg:py-12 print:max-w-none print:p-0">
+    <main class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:max-w-none lg:px-8 lg:py-10 xl:max-w-[1400px] 2xl:max-w-[1700px] print:max-w-none print:p-0">
       <div class="${animateNext?'animate-fade-up':''}">
         ${actions?`<div class="mb-4 flex flex-wrap items-center gap-2 lg:hidden print:hidden">${actions}</div>`:''}
         <div class="mb-8 hidden flex-wrap items-start justify-between gap-4 lg:flex">
