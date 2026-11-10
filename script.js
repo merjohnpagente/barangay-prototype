@@ -1,8 +1,8 @@
 const puroks=['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5'];
 const pat=[['Yes'],['No'],['Yes'],['No'],['No']];
 const AUTH_KEY='barangay-session-v1';
-const VIEWS=['dashboard','records','survey','reports'];
-const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return s==='assistance'?'records':VIEWS.includes(s)?s:null}catch(e){return null}})();
+const VIEWS=['dashboard','records','survey'];
+const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return s==='assistance'?'records':s==='reports'?'dashboard':VIEWS.includes(s)?s:null}catch(e){return null}})();
 let animateNext=true;
 let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,editIndex=-1,loginError='';
 const AUTH_USER='admin',AUTH_PASS='admin123';
@@ -101,8 +101,8 @@ const printIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const closeIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-4 w-4" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12"/></svg>`;
 const logoutIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M15 12H3m0 0 3-3m-3 3 3 3M10 5V3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-9v-2"/></svg>`;
 
-const navItems=[['dashboard','Dashboard'],['records','Residents'],['survey','Survey'],['reports','Reports']];
-const navGroups=[['Overview',navItems.slice(0,1)],['Records',navItems.slice(1,3)],['Insights',navItems.slice(3)]];
+const navItems=[['dashboard','Dashboard'],['records','Residents'],['survey','Survey']];
+const navGroups=[['Overview',navItems.slice(0,1)],['Records',navItems.slice(1,3)]];
 const navBtn=(k,l)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}">${l}</button>`;
 const navGroupMarkup=()=>navGroups.map(([label,items])=>`<div><p class="px-3 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">${label}</p><div class="space-y-0.5">${items.map(([k,l])=>navBtn(k,l)).join('')}</div></div>`).join('');
 const logoutBtn=`<button type="button" onclick="logout()" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-red-50 hover:text-red-700">${logoutIcon}Logout</button>`;
@@ -151,7 +151,7 @@ function shell(title,subtitle,body,actions=''){
 }
 
 function draw(){
-  const views={login,dashboard,survey,records:recs,reports};
+  const views={login,dashboard,survey,records:recs};
   document.getElementById('app').innerHTML=views[v]();
   animateNext=false;
   renderModal();
@@ -393,13 +393,9 @@ function syncAge(){
   if(input)input.value=a;
 }
 
-let printPurok='all';
-function setPrintPurok(value){
-  printPurok=value;
-  document.querySelectorAll('.print-purok-select').forEach(el=>{el.value=value});
-}
 function printResidents(){
-  const list=residents.filter(r=>printPurok==='all'||r.purok===printPurok).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base'}));
+  const list=filteredResidents().map(({r})=>r);
+  const scope=[purokBy==='all'?'':purokBy,filterBy==='all'?'':filterBy==='pwd'?'PWD residents':filterBy,q.trim()?`“${q.trim()}”`:''].filter(Boolean).join(' · ');
   const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   const th=h=>`<th class="border border-slate-400 bg-slate-100 px-2 py-1.5 text-left font-semibold">${h}</th>`;
   const td=(c,cls='')=>`<td class="border border-slate-300 px-2 py-1.5 ${cls}">${esc(c)}</td>`;
@@ -407,7 +403,7 @@ function printResidents(){
   let root=document.getElementById('print-root');
   if(!root){root=document.createElement('div');root.id='print-root';document.body.appendChild(root)}
   root.innerHTML=`<div class="p-2 text-slate-900">
-    <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents${printPurok==='all'?'':' · '+esc(printPurok)}</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
+    <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents${scope?' · '+esc(scope):''}</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
     <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong> · PWD: <strong>${list.filter(r=>r.pwd==='Yes').length}</strong></span><span>Printed on ${date}</span></p>
     <table class="mt-2 w-full border-collapse text-xs"><thead>${['No.','ID','Name','Purok','Age','Sex','Civil status','Work','PWD'].map(th).join('')}</thead><tbody>${rows||'<tr><td colspan="9" class="border border-slate-300 px-2 py-4 text-center text-slate-500">No residents found.</td></tr>'}</tbody></table>
   </div>`;
@@ -416,13 +412,16 @@ function printResidents(){
   window.addEventListener('afterprint',done);
   setTimeout(()=>window.print(),50);
 }
-function recordsCard(){
+function filteredResidents(){
   const needle=q.trim().toLowerCase();
-  const filtered=residents.map((r,i)=>({r,i})).filter(({r})=>
+  return residents.map((r,i)=>({r,i})).filter(({r})=>
     (!needle||r.name.toLowerCase().includes(needle)||String(r.id||'').toLowerCase().includes(needle)) &&
     (filterBy==='all'||(filterBy==='pwd'?r.pwd==='Yes':r.civil===filterBy)) &&
     (purokBy==='all'||r.purok===purokBy)
   ).sort((a,b)=>a.r.name.localeCompare(b.r.name,undefined,{sensitivity:'base'}));
+}
+function recordsCard(){
+  const filtered=filteredResidents();
   const perPage=10;
   const pages=Math.max(1,Math.ceil(filtered.length/perPage));
   if(page>pages)page=pages;
@@ -438,7 +437,7 @@ function recordsCard(){
   <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`;
 }
 function recs(){
-  const actions=`<button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
+  const actions=`<button type="button" class="${btnGhost}" onclick="printResidents()">${printIcon}Print</button><button type="button" class="${btnGhost}" onclick="exportCsv()">Export</button><button type="button" class="${btnPrimary}" onclick="go('survey')">Add resident</button>`;
   return shell('Resident Records','Search, review, and update resident profiles.',`<div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <form class="flex gap-2 sm:max-w-md" onsubmit="event.preventDefault();setSearch(document.getElementById('search').value)">
       <input id="search" type="search" class="${field}" placeholder="Search name or ID..." aria-label="Search residents by name or ID" value="${esc(q)}" enterkeyhint="search" oninput="setSearch(this.value)"><button type="submit" class="${btnGhost} shrink-0">Search</button>
@@ -456,18 +455,6 @@ function recs(){
     </div>
   </div>
   <div id="records-results">${recordsCard()}</div>`,actions);
-}
-
-function reports(){
-  const s=summary();
-  const stats=[[s.total,'Total residents'],[s.pwd,'PWD residents']];
-  const counts=puroks.map(p=>residents.filter(r=>r.purok===p).length);
-  const maxCount=Math.max(1,...counts);
-  const bars=counts.map(n=>[Math.round(n/maxCount*100),n]);
-  return shell('Reports and Summary','A snapshot of the residents across the barangay.',`<div class="grid grid-cols-2 gap-3">${stats.map(([n,l])=>statCard(n,l)).join('')}</div>
-  <div class="mt-3 grid gap-3 lg:grid-cols-5">
-    <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-5"><h2 class="text-sm font-medium text-slate-900">Residents per Purok</h2><p class="mt-0.5 text-xs text-slate-500">Number of residents in each area.</p><div class="mt-8 flex h-40 items-end gap-3 sm:gap-4">${bars.map(([h,n],i)=>`<div class="relative flex h-full flex-1 items-end"><span class="absolute inset-x-0 -top-5 text-center text-[11px] font-medium text-slate-400">${n}</span><div class="w-full origin-bottom animate-grow-y rounded-t bg-pine-700" style="height:${h}%;animation-delay:${i*60}ms" title="Purok ${i+1}: ${n}"></div></div>`).join('')}</div><div class="mt-3 flex gap-3 border-t border-slate-100 pt-3 sm:gap-4">${bars.map((_,i)=>`<span class="flex-1 text-center text-[11px] text-slate-400">Purok ${i+1}</span>`).join('')}</div></section>
-  </div>`,`<select class="print-purok-select ${field} w-40" aria-label="Choose what to print" onchange="setPrintPurok(this.value)"><option value="all" ${printPurok==='all'?'selected':''}>All puroks</option>${puroks.map(x=>`<option value="${x}" ${printPurok===x?'selected':''}>${x}</option>`).join('')}</select><button type="button" class="${btnGhost}" onclick="printResidents()">${printIcon}Print</button><button type="button" class="${btnPrimary}" onclick="exportCsv()">Export</button>`);
 }
 
 draw();
