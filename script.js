@@ -4,7 +4,7 @@ const AUTH_KEY='barangay-session-v1';
 const VIEWS=['dashboard','records','survey'];
 const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return s==='assistance'?'records':s==='reports'?'dashboard':VIEWS.includes(s)?s:null}catch(e){return null}})();
 let animateNext=true;
-let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,editIndex=-1,loginError='';
+let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='';
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
 const names=['Santos, Maria Cruz','Reyes, Juan Dela Pena','Garcia, Ana Lopez','Bautista, Pedro Ramos','Mendoza, Rosa Flores','Villanueva, Jose Aquino','Castillo, Liza Navarro','Torres, Miguel Santiago','Dizon, Carmen Pascual','Ramos, Antonio Cruz'];
@@ -36,7 +36,7 @@ const nowYear=new Date().getFullYear();
 let residents=(()=>{
   try{
     const saved=JSON.parse(localStorage.getItem(STORE));
-    if(!Array.isArray(saved)||!saved.length)return seed;
+    if(!Array.isArray(saved))return seed;
     let changed=false;
     let nextId=saved.reduce((m,r)=>Math.max(m,Number(String(r.id||'').replace(/\D/g,''))||0),0)+1;
     saved.forEach(r=>{
@@ -98,6 +98,7 @@ const checkIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const clockIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
 const menuIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-5 w-5" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
 const printIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>`;
+const trashIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>`;
 const closeIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-4 w-4" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12"/></svg>`;
 const logoutIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M15 12H3m0 0 3-3m-3 3 3 3M10 5V3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-9v-2"/></svg>`;
 
@@ -159,17 +160,44 @@ function draw(){
 function renderModal(){
   let el=document.getElementById('modal-root');
   if(!el){el=document.createElement('div');el.id='modal-root';document.body.appendChild(el)}
-  el.innerHTML=(viewIndex>=0&&v==='records')?residentModal():'';
+  el.innerHTML=v==='records'?((viewIndex>=0?residentModal():'')+(deleteIndex>=0?deleteModal():'')):'';
 }
 function go(k){
-  v=k;animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;editIndex=-1;
+  v=k;animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;deleteIndex=-1;editIndex=-1;
   try{k==='login'?localStorage.removeItem(AUTH_KEY):localStorage.setItem(AUTH_KEY,k)}catch(e){}
   draw()
 }
 function editResident(i){editIndex=i;v='survey';animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;draw()}
 function openResident(i){viewIndex=i;renderModal()}
 function closeResident(){viewIndex=-1;renderModal()}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&viewIndex>=0)closeResident()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(deleteIndex>=0)closeDelete();
+  else if(viewIndex>=0)closeResident();
+});
+function askDelete(i){deleteIndex=i;renderModal()}
+function closeDelete(){deleteIndex=-1;renderModal()}
+function confirmDelete(){
+  const r=residents[deleteIndex];
+  if(!r){closeDelete();return}
+  residents.splice(deleteIndex,1);
+  persist();
+  deleteIndex=-1;viewIndex=-1;
+  renderRecords();
+  renderModal();
+  flash('Resident deleted');
+}
+function deleteModal(){
+  const r=residents[deleteIndex];
+  if(!r)return '';
+  return `<div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4" onclick="if(event.target===this)closeDelete()" role="alertdialog" aria-modal="true" aria-label="Delete resident">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+    <div class="grid h-11 w-11 place-items-center rounded-full bg-red-50 text-red-600">${trashIcon}</div>
+    <h2 class="mt-4 text-base font-semibold text-slate-900">Delete this resident?</h2>
+    <p class="mt-1 text-sm text-slate-600"><span class="font-medium text-slate-900">${esc(r.name)}</span> (${esc(r.id||'')}) will be removed from the records. This cannot be undone.</p>
+    <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btnGhost}" onclick="closeDelete()">Cancel</button><button type="button" class="${btn} bg-red-600 text-white hover:bg-red-700" onclick="confirmDelete()">Delete</button></div>
+  </div></div>`;
+}
 let searchTimer;
 function renderRecords(){
   const results=document.getElementById('records-results');
@@ -321,7 +349,7 @@ function residentModal(){
     <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||r.spouse?row(spouseLabel(r.sex),r.spouse):''}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Purok',r.purok)}</dl>
     ${r.remarks?`<div class="mt-4"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Remarks</p><p class="mt-0.5 whitespace-pre-line text-sm text-slate-700">${esc(r.remarks)}</p></div>`:''}
     <div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Children</h3>${kids.length?`<span class="text-xs text-slate-500">${here} of ${kids.length} resident${kids.length>1?'s':''}</span>`:''}</div><ul class="mt-1 divide-y divide-slate-100">${kidList}</ul></div>
-    <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btnPrimary}" onclick="editResident(${viewIndex})">Edit</button></div>
+    <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDelete(${viewIndex})">Delete</button><button type="button" class="${btnPrimary}" onclick="editResident(${viewIndex})">Edit</button></div>
   </div></div>`;
 }
 
@@ -430,10 +458,10 @@ function recordsCard(){
   const arrow=(target,disabled,symbol,label)=>`<button type="button" ${disabled?'disabled':''} onclick="setPage(${target})" aria-label="${label}" title="${label}" class="grid h-8 w-8 place-items-center rounded-md border border-slate-300 bg-white text-slate-500 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40">${symbol}</button>`;
   const pager=Array.from({length:pages},(_,i)=>pg(i+1)).join('');
   const rowMarkup=rows.length?rows.map(({r,i})=>{
-    return `<tr onclick="openResident(${i})" class="cursor-pointer transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(r.id||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-600">${esc(r.purok||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.civil||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-2"><button type="button" onclick="event.stopPropagation();openResident(${i})" class="whitespace-nowrap rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50">View</button><button type="button" onclick="event.stopPropagation();editResident(${i})" class="whitespace-nowrap rounded-md border border-pine-200 bg-pine-50 px-2.5 py-1 text-xs font-medium text-pine-700 transition hover:bg-pine-100">Edit</button></div></td></tr>`;
+    return `<tr onclick="openResident(${i})" class="cursor-pointer transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(r.id||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(r.name)}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-600">${esc(r.purok||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(ageOf(r))}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.civil||'')}</td><td class="px-3 py-3.5 text-slate-500">${esc(r.job)}</td><td class="px-3 py-3.5 text-slate-600">${esc(r.pwd)}</td><td class="px-5 py-3.5 text-right"><div class="flex justify-end gap-2"><button type="button" onclick="event.stopPropagation();openResident(${i})" class="whitespace-nowrap rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50">View</button><button type="button" onclick="event.stopPropagation();editResident(${i})" class="whitespace-nowrap rounded-md border border-pine-200 bg-pine-50 px-2.5 py-1 text-xs font-medium text-pine-700 transition hover:bg-pine-100">Edit</button><button type="button" onclick="event.stopPropagation();askDelete(${i})" class="whitespace-nowrap rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-100">Delete</button></div></td></tr>`;
   }).join(''):`<tr><td colspan="8" class="px-5 py-10 text-center text-sm text-slate-500">No residents found.</td></tr>`;
   const footer=filtered.length?`Showing <span class="font-medium text-slate-700">${(page-1)*perPage+1}–${Math.min(page*perPage,filtered.length)}</span> of ${filtered.length} residents`:'No residents found';
-  return `<div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[860px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Purok</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Civil status</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
+  return `<div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[940px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">ID</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Purok</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Civil status</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">PWD</th><th class="px-5 py-3 text-right font-medium">Action</th></tr></thead><tbody class="divide-y divide-slate-100">${rowMarkup}</tbody></table></div>
   <div class="flex flex-col gap-3 border-t border-slate-200 p-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><span>${footer}</span><div class="flex items-center gap-1.5">${pages>1?`${arrow(page-1,page===1,'‹','Previous page')}${pager}${arrow(page+1,page===pages,'›','Next page')}`:''}</div></div></div>`;
 }
 function recs(){
