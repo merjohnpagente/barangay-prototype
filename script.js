@@ -301,15 +301,24 @@ function logout(){
   if(confirm('Are you sure you want to log out?')){loginError='';go('login')}
 }
 function attemptLogin(){
-  const username=(document.getElementById('u')?.value||'').trim();
-  const password=document.getElementById('p')?.value||'';
-  if(username===AUTH_USER&&password===AUTH_PASS){
-    loginError='';
-    go('dashboard');
-    return;
-  }
-  loginError='Invalid username or password.';
-  draw();
+  const uEl=document.getElementById('u'),pEl=document.getElementById('p');
+  const username=(uEl?.value||'').trim(),password=pEl?.value||'';
+  const err=document.getElementById('login-error'),btn=document.getElementById('login-btn'),label=document.getElementById('login-label');
+  const fail=msg=>{
+    loginError=msg;
+    if(err){err.textContent=msg;err.classList.remove('hidden')}
+    const card=document.getElementById('login-card');
+    if(card&&!reduceMotion()){card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake')}
+    (username&&!password||!username?uEl:pEl)?.focus();
+  };
+  if(!username||!password)return fail('Please enter your username and password.');
+  if(btn){btn.disabled=true;label.textContent='Signing in…'}
+  setTimeout(()=>{
+    if(username===AUTH_USER&&password===AUTH_PASS){loginError='';go('dashboard');return}
+    if(btn){btn.disabled=false;label.textContent='Sign in'}
+    if(pEl){pEl.value='';}
+    fail('Incorrect username or password. Please try again.');
+  },450);
 }
 let toastTimer;
 function flash(m){
@@ -337,19 +346,53 @@ function toggleMenu(){
 }
 
 function login(){
-  return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
-  <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
-  <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
-  <div class="relative z-10 w-full max-w-md ${animateNext?'animate-fade-up':''} rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
-    <div class="text-center"><div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="Barangay Migcanaway seal" class="h-16 w-16 rounded-full object-cover ring-1 ring-slate-200 sm:h-20 sm:w-20"><img src="assets/tangub-logo.jpg" alt="Tangub City seal" class="h-16 w-16 object-contain sm:h-20 sm:w-20"></div><p class="mt-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
-    <form class="mt-6 space-y-4" onsubmit="event.preventDefault();attemptLogin()">
-      <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username" required></div>
-      <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password" required></div>
-      ${loginError?`<p role="alert" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">${loginError}</p>`:''}
-      <button type="submit" class="${btnPrimary} mt-2 w-full px-4 py-3">Login</button>
-    </form>
-  </div>
+  const ic=(d,c='h-[18px] w-[18px]')=>`<svg class="${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const userI=ic('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),lockI=ic('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),checkI=ic('<path d="m5 12 4.5 4.5L19 7"/>','h-4 w-4');
+  const inp='block w-full rounded-lg border border-slate-300 bg-white py-3 pl-11 text-base text-slate-900 placeholder:text-slate-400 transition focus:border-pine-700 focus:outline-none focus:ring-4 focus:ring-pine-700/10 sm:text-sm';
+  const seals=(size)=>`<span class="grid ${size} shrink-0 place-items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-black/5"><img src="assets/barangay-logo.jpg" alt="Barangay Migcanaway seal" class="h-full w-full object-cover"></span><span class="grid ${size} shrink-0 place-items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-black/5"><img src="assets/tangub-logo.jpg" alt="Tangub City seal" class="h-[86%] w-[86%] object-contain"></span>`;
+  const points=['Resident and household records in one place','PWD, voter and 4Ps tracking','Print and export-ready lists by purok'].map((t,i)=>`<li class="reveal flex items-center gap-3 text-sm text-pine-100" style="--d:${420+i*90}ms"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/10 text-emerald-200 ring-1 ring-white/15">${checkI}</span>${t}</li>`).join('');
+  return `<div class="min-h-screen bg-cream lg:grid lg:grid-cols-[1.05fr_1fr]">
+  <aside class="relative hidden overflow-hidden bg-gradient-to-br from-pine-900 via-pine-800 to-pine-700 p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16" aria-hidden="false">
+    <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -right-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-emerald-300/15 blur-[110px] animate-drift"></div><div class="absolute -bottom-40 -left-24 h-[26rem] w-[26rem] rounded-full bg-pine-600/50 blur-[110px] animate-drift"></div><div class="absolute inset-0 opacity-[0.07]" style="background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:44px 44px"></div></div>
+    <div class="reveal relative z-10 flex items-center gap-3">${seals('h-14 w-14')}</div>
+    <div class="relative z-10 max-w-md">
+      <p class="reveal text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-200" style="--d:120ms">Barangay</p>
+      <h1 class="reveal mt-3 text-5xl font-semibold tracking-tight xl:text-6xl" style="--d:200ms">Migcanaway</h1>
+      <p class="reveal mt-3 text-sm font-medium uppercase tracking-[0.22em] text-pine-200" style="--d:280ms">Tangub City · Resident Survey</p>
+      <p class="reveal mt-6 text-base leading-7 text-pine-100/90" style="--d:340ms">Keep resident records accurate, organized and ready for reporting.</p>
+      <ul class="mt-8 space-y-3.5">${points}</ul>
+    </div>
+    <p class="relative z-10 text-xs text-pine-200/80">© ${new Date().getFullYear()} Barangay Migcanaway, Tangub City</p>
+  </aside>
+  <main class="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-10 sm:px-8 lg:min-h-0">
+    <div class="pointer-events-none absolute inset-0 lg:hidden" aria-hidden="true"><div class="absolute -left-32 top-0 h-80 w-80 rounded-full bg-pine-100/80 blur-[100px] animate-drift"></div><div class="absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-emerald-100/70 blur-[100px] animate-drift"></div></div>
+    <div class="relative z-10 w-full max-w-[26rem]">
+      <div class="reveal mb-8 text-center lg:hidden"><div class="flex items-center justify-center gap-3">${seals('h-16 w-16')}</div><p class="mt-5 text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-1 text-3xl font-semibold tracking-tight text-pine-800">Migcanaway</h1><p class="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">Tangub City · Resident Survey</p></div>
+      <div id="login-card" class="reveal rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_30px_90px_-40px_rgba(12,40,34,0.35)] sm:p-8" style="--d:80ms">
+        <h2 class="text-xl font-semibold tracking-tight text-slate-900">Welcome back</h2>
+        <p class="mt-1 text-sm text-slate-500">Sign in to manage resident records.</p>
+        <form class="mt-7 space-y-5" onsubmit="event.preventDefault();attemptLogin()" novalidate>
+          <div><label class="${labelCls}" for="u">Username</label><div class="relative"><span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">${userI}</span><input id="u" class="${inp} pr-3.5" placeholder="Enter username" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus oninput="loginClear()"></div></div>
+          <div><label class="${labelCls}" for="p">Password</label><div class="relative"><span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">${lockI}</span><input id="p" type="password" class="${inp} pr-12" placeholder="Enter password" autocomplete="current-password" oninput="loginClear()" onkeyup="capsHint(event)" onkeydown="capsHint(event)"><button type="button" id="pw-toggle" onclick="togglePw()" aria-label="Show password" aria-pressed="false" class="absolute right-1.5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span id="pw-eye">${ic('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>')}</span></button></div><p id="caps-hint" class="mt-1.5 hidden text-xs font-medium text-amber-600">Caps Lock is on</p></div>
+          <p id="login-error" role="alert" aria-live="assertive" class="${loginError?'':'hidden '}rounded-lg border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm font-medium text-red-700">${loginError||''}</p>
+          <button id="login-btn" type="submit" class="${btnPrimary} w-full py-3 text-[15px] shadow-sm sm:text-sm"><span id="login-label">Sign in</span></button>
+        </form>
+      </div>
+      <p class="reveal mt-6 text-center text-xs text-slate-400" style="--d:260ms">Authorized barangay staff only.</p>
+    </div>
+  </main>
 </div>`;
+}
+function loginClear(){const e=document.getElementById('login-error');if(e&&!e.classList.contains('hidden')){e.classList.add('hidden');e.textContent=''}loginError=''}
+function capsHint(e){const h=document.getElementById('caps-hint');if(h&&e.getModifierState)h.classList.toggle('hidden',!e.getModifierState('CapsLock'))}
+function togglePw(){
+  const p=document.getElementById('p'),b=document.getElementById('pw-toggle'),eye=document.getElementById('pw-eye');
+  if(!p)return;
+  const show=p.type==='password';
+  p.type=show?'text':'password';
+  b.setAttribute('aria-pressed',String(show));b.setAttribute('aria-label',show?'Hide password':'Show password');
+  eye.innerHTML=show?'<svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.7 10.7 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3.2 3.9M6.6 6.6A17 17 0 0 0 2 12s3.6 6 10 6c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>':'<svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  p.focus();
 }
 
 function dashboard(){
