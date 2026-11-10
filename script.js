@@ -20,8 +20,10 @@ const seedChildren={
   'Bautista, Pedro Ramos':[{name:'Bautista, Carlo Ramos',age:35,here:'No'}],
   'Mendoza, Rosa Flores':[{name:'Mendoza, Liza Flores',age:16,here:'Yes'}]
 };
+const seedSex={'Santos, Maria Cruz':'Female','Reyes, Juan Dela Pena':'Male','Garcia, Ana Lopez':'Female','Bautista, Pedro Ramos':'Male','Mendoza, Rosa Flores':'Female','Villanueva, Jose Aquino':'Male','Castillo, Liza Navarro':'Female','Torres, Miguel Santiago':'Male','Dizon, Carmen Pascual':'Female','Ramos, Antonio Cruz':'Male'};
+const seedSpouse={'Santos, Maria Cruz':'Santos, Roberto Cruz','Reyes, Juan Dela Pena':'Reyes, Elena Dela Pena','Mendoza, Rosa Flores':'Mendoza, Carlos Flores','Torres, Miguel Santiago':'Torres, Gina Santiago'};
 const birthdays=ages.map((age,i)=>`${2026-age}-${String((i%10)+1).padStart(2,'0')}-${String((i*2)%27+1).padStart(2,'0')}`);
-const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,name,age:ages[i],ageYear:2026,birthday:birthdays[i],civil:civils[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||'',children:seedChildren[name]||[]}));
+const seed=names.map((name,i)=>({id:`R-${String(i+1).padStart(3,'0')}`,name,age:ages[i],ageYear:2026,birthday:birthdays[i],civil:civils[i],job:jobs[i],purok:puroks[i%5],pwd:pat[i%5][0],aid:pat[i%5][1],need:seedNeeds[name]||'',children:seedChildren[name]||[],sex:seedSex[name]||'',spouse:seedSpouse[name]||''}));
 const renumber=list=>{
   let changed=false;
   [...list].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base'})).forEach((r,i)=>{
@@ -42,6 +44,8 @@ let residents=(()=>{
       if(!r.id){r.id=`R-${String(nextId++).padStart(3,'0')}`;changed=true}
       if(!r.civil){r.civil='Single';changed=true}
       if(!Array.isArray(r.children)){r.children=seedChildren[r.name]||[];changed=true}
+      if(r.spouse===undefined){r.spouse=seedSpouse[r.name]||'';changed=true}
+      if(!r.sex&&seedSex[r.name]){r.sex=seedSex[r.name];changed=true}
       if(r.birthday)return;
       if(!r.ageYear){r.ageYear=nowYear;changed=true}
       else if(nowYear>r.ageYear){
@@ -274,6 +278,12 @@ const childRow=(c={})=>`<div class="child-row grid grid-cols-12 items-center gap
   <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Resident of Barangay Migcanaway or not"><option value="Yes" ${c.here!=='No'?'selected':''}>Resident</option><option value="No" ${c.here==='No'?'selected':''}>Non-resident</option></select>
   <button type="button" onclick="this.closest('.child-row').remove()" class="col-span-12 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:col-span-3" aria-label="Remove this child" title="Remove this child">${closeIcon}<span>Remove</span></button>
 </div>`;
+function syncSpouse(){
+  const val=id=>(document.getElementById(id)||{}).value||'';
+  const wrap=document.getElementById('spouse-wrap'),label=document.getElementById('spouse-label');
+  if(wrap)wrap.classList.toggle('hidden',val('civil')!=='Married'&&!val('spouse').trim());
+  if(label)label.textContent=spouseLabel(val('sex'));
+}
 function addChildRow(){
   const list=document.getElementById('children-list');
   if(!list)return;
@@ -287,6 +297,7 @@ function readChildren(){
     return {name:row.querySelector('.child-name').value.trim(),age:age===''?'':Number(age),here:row.querySelector('.child-here').value==='No'?'No':'Yes'};
   }).filter(c=>c.name);
 }
+const spouseLabel=sex=>sex==='Female'?'Husband':sex==='Male'?'Wife':'Spouse';
 function residentModal(){
   const r=residents[viewIndex];
   if(viewIndex<0||!r)return '';
@@ -297,7 +308,7 @@ function residentModal(){
   return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)closeResident()" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="closeResident()" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
-    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Assistance',r.aid+(r.need?' · '+r.need:''))}${row('Purok',r.purok)}</dl>
+    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||r.spouse?row(spouseLabel(r.sex),r.spouse):''}${row('Work',r.job)}${row('PWD',r.pwd)}${row('Assistance',r.aid+(r.need?' · '+r.need:''))}${row('Purok',r.purok)}</dl>
     ${r.remarks?`<div class="mt-4"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Remarks</p><p class="mt-0.5 whitespace-pre-line text-sm text-slate-700">${esc(r.remarks)}</p></div>`:''}
     <div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Children</h3>${kids.length?`<span class="text-xs text-slate-500">${here} of ${kids.length} resident${kids.length>1?'s':''}</span>`:''}</div><ul class="mt-1 divide-y divide-slate-100">${kidList}</ul></div>
     <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btnPrimary}" onclick="editResident(${viewIndex})">Edit</button></div>
@@ -313,9 +324,10 @@ function survey(){
     <section><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p></div><div class="flex items-center gap-2">${editing?`<span class="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span>`:''}<button type="button" onclick="go('records')" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close and return to Residents" title="Close">${closeIcon}</button></div></div><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       <div class="sm:col-span-4"><label class="${labelCls}" for="fullname">Full name</label><input id="fullname" class="${field}" placeholder="Last, First, Middle" value="${esc(r.name||'')}" required oninput="clearFormError()"><p id="form-error" class="mt-1 hidden text-xs font-medium text-red-600" role="alert"></p></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}"></div>
-      <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex"')}</div>
+      <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
-      <div class="sm:col-span-2"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil"')}</div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
+      <div id="spouse-wrap" class="sm:col-span-4 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><label id="spouse-label" class="${labelCls}" for="spouse">${spouseLabel(r.sex)}</label><input id="spouse" class="${field}" placeholder="Last, First, Middle" value="${esc(r.spouse||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
@@ -346,7 +358,7 @@ function saveSurvey(){
   const pwd=document.querySelector('input[name="pwd"]:checked');
   const aid=editIndex>=0?residents[editIndex].aid:'Pending';
   const id=editIndex>=0?residents[editIndex].id:makeId();
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),children:readChildren(),aid};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:val('civil')||'Single',spouse:val('spouse').trim(),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',need:val('need'),remarks:val('remarks').trim(),children:readChildren(),aid};
   if(editIndex>=0){
     residents[editIndex]=rec;
     persist();
