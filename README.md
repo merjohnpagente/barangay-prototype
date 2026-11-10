@@ -1,3 +1,3 @@
 # Barangay Migcanaway
 
-Resident Survey and Assistance Tracking System.
+Resident Survey System.
