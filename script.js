@@ -435,7 +435,7 @@ function home(){
     <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(251,146,60,.28),transparent_60%)]"></div>
       <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-orange-500/10 blur-[120px] animate-drift"></div>
-      <img src="assets/barangay-logo.webp?v=3" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 object-contain opacity-30 drop-shadow-2xl aspect-square sm:right-[5%] sm:h-[min(46rem,calc(100vh_-_7rem))] sm:w-auto sm:opacity-100">
+      <img src="assets/barangay-logo.webp?v=3" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 object-contain opacity-30 drop-shadow-2xl aspect-square sm:right-[max(3%,calc((100%_-_72rem)/2))] sm:h-[min(46rem,calc(100vh_-_7rem))] sm:w-auto sm:opacity-100">
       <div class="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent sm:w-[45%] sm:via-white/50"></div>
       <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent sm:h-0"></div>
     </div>

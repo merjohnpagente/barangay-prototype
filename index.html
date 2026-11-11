@@ -61,7 +61,7 @@ tailwind.config = {
 <style>
   :root { color-scheme: light; }
   html { scroll-behavior: smooth; }
-  @media (min-width: 1024px) { html { font-size: 80%; } }
+  @media (min-width: 1024px) and (max-width: 1535px) { html { font-size: 80%; } }
   @keyframes page-in { from { opacity: 0; transform: translateY(14px) scale(.99) } to { opacity: 1; transform: none } }
   @keyframes reveal { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
   @keyframes row-in { from { opacity: 0; transform: translateX(-12px) } to { opacity: 1; transform: none } }
@@ -108,6 +108,6 @@ tailwind.config = {
 </head>
 <body class="h-full bg-cream font-sans text-slate-900 antialiased">
 <div id="app"></div>
-<script src="script.js?v=20261111-24"></script>
+<script src="script.js?v=20261111-25"></script>
 </body>
 </html>
