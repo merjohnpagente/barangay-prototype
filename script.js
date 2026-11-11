@@ -410,6 +410,34 @@ function splitName(str){
   const w=t.split(/\s+/);
   return w.length===1?{last:w[0],first:'',middle:''}:{last:w[w.length-1],first:w[0],middle:w.slice(1,-1).join(' ')};
 }
+function setFieldError(id,msg,label){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.dataset.invalid=msg;el.dataset.label=label||'';
+  el.style.borderColor='#ef4444';el.style.boxShadow='0 0 0 3px rgba(239,68,68,.15)';
+  el.setAttribute('aria-invalid','true');
+  let p=el.parentElement.querySelector(`[data-err-for="${id}"]`);
+  if(!p){p=document.createElement('p');p.dataset.errFor=id;p.style.cssText='margin-top:4px;font-size:12px;font-weight:500;color:#dc2626';el.insertAdjacentElement('afterend',p)}
+  p.textContent=msg;
+}
+function clearFieldError(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  delete el.dataset.invalid;delete el.dataset.label;
+  el.style.borderColor='';el.style.boxShadow='';el.removeAttribute('aria-invalid');
+  const p=el.parentElement.querySelector(`[data-err-for="${id}"]`);
+  if(p)p.remove();
+}
+function refreshFormSummary(){
+  const box=document.getElementById('form-summary');
+  if(!box)return;
+  const bad=[...document.querySelectorAll('[data-invalid]')];
+  if(!bad.length){box.classList.add('hidden');box.textContent='';return}
+  box.classList.remove('hidden');
+  box.innerHTML=`<strong>Can't save yet.</strong> Please fix: ${bad.map(b=>esc(b.dataset.label||b.id)).join(', ')}.`;
+}
+document.addEventListener('input',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.invalid!==undefined){clearFieldError(el.id);refreshFormSummary()}});
+document.addEventListener('change',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.invalid!==undefined){clearFieldError(el.id);refreshFormSummary()}});
 const titleCase=str=>String(str||'').replace(/(^|[\s\-'’.])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
 const isInitialOnly=str=>{const w=String(str||'').trim().split(/\s+/).filter(Boolean);return w.length>0&&w.every(x=>/^\p{L}\.?$/u.test(x))};
 function capName(el,isMiddle){
@@ -472,7 +500,7 @@ function survey(){
   const r=editing?residents[editIndex]:{};
   const nm=splitName(r.name),sp=splitName(spouseName(r)),spLinked=!!byUid(r.spouseUid);
   const so=(a,selected='')=>`<select class="${field}"><option value="">Select</option>${a.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}</select>`;
-  return shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile.':'Add a resident to the survey record.',`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" onsubmit="event.preventDefault();saveSurvey()">
+  return shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile.':'Add a resident to the survey record.',`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" novalidate onsubmit="event.preventDefault();saveSurvey()">
   <div class="space-y-8 p-5 sm:p-7">
     <section><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p></div><div class="flex items-center gap-2">${editing?`<span class="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span>`:''}<button type="button" onclick="go('records')" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close and return to Residents" title="Close">${closeIcon}</button></div></div><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       ${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<div class="sm:col-span-2"><label class="${labelCls}" for="${k}name">${l}</label><input id="${k}name" class="${field}" placeholder="${l}" value="${esc(nm[k])}" ${k!=='middle'?'required':''} oninput="capName(this,${k==='middle'});clearFormError()" autocapitalize="words"></div>`).join('')}
@@ -496,26 +524,31 @@ function survey(){
       <div class="sm:col-span-6"><label class="${labelCls}" for="remarks">Remarks</label><textarea id="remarks" class="${field} min-h-[6rem] resize-y" placeholder="Type notes here...">${esc(r.remarks||'')}</textarea></div>
     </div></section>
   </div>
+  <div id="form-summary" class="hidden border-t border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700 sm:px-7" role="alert"></div>
   <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':'Save resident'}</button></div>
 </form>`);
 }
 
 function saveSurvey(){
   const val=id=>(document.getElementById(id)||{}).value||'';
-  if(isInitialOnly(val('middlename'))){
-    const error=document.getElementById('form-error');
-    if(error){error.textContent='Middle name must be written in full, not just an initial.';error.classList.remove('hidden')}
-    const input=document.getElementById('middlename');
-    if(input&&typeof input.focus==='function')input.focus();
-    return;
-  }
+  ['lastname','firstname','middlename','pwd-type','contact'].forEach(clearFieldError);
+  const errBox=document.getElementById('form-error');
+  if(errBox){errBox.textContent='';errBox.classList.add('hidden')}
   const name=joinName(titleCase(val('lastname')),titleCase(val('firstname')),titleCase(val('middlename')));
-  if(!val('lastname').trim()||!val('firstname').trim())return;
-  if(residents.some((r,i)=>i!==editIndex&&normName(r.name)===normName(name))){
-    const error=document.getElementById('form-error');
-    if(error){error.textContent='A resident with this name already exists.';error.classList.remove('hidden')}
-    const input=document.getElementById('lastname');
-    if(input&&typeof input.focus==='function')input.focus();
+  const problems=[];
+  if(!val('lastname').trim())problems.push(['lastname','Last name is required.','Last name']);
+  if(!val('firstname').trim())problems.push(['firstname','First name is required.','First name']);
+  if(isInitialOnly(val('middlename')))problems.push(['middlename','Write the middle name in full, not just an initial.','Middle name']);
+  const pwdSel=document.querySelector('input[name="pwd"]:checked');
+  if(pwdSel&&pwdSel.value==='Yes'&&!val('pwd-type'))problems.push(['pwd-type','Select the type of PWD.','Type of PWD']);
+  const contactVal=val('contact').trim();
+  if(contactVal&&!/^(09|\+639)[0-9]{9}$/.test(contactVal))problems.push(['contact','Use 09XXXXXXXXX or +639XXXXXXXXX.','Contact number']);
+  if(!problems.some(x=>x[0]==='lastname'||x[0]==='firstname')&&residents.some((r,i)=>i!==editIndex&&normName(r.name)===normName(name)))problems.push(['lastname','A resident with this name already exists.','Name (already exists)']);
+  if(problems.length){
+    problems.forEach(([id,msg,label])=>setFieldError(id,msg,label));
+    refreshFormSummary();
+    const first=document.getElementById(problems[0][0]);
+    if(first){first.scrollIntoView({behavior:'smooth',block:'center'});if(typeof first.focus==='function')first.focus({preventScroll:true})}
     return;
   }
   const birthday=val('birthday');
