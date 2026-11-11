@@ -923,7 +923,13 @@ function publicShell(body,title='Resident Survey Form',subtitle='Fill out your d
   return `<div class="relative min-h-screen bg-cream text-slate-900">
   <header class="border-b border-slate-200 bg-white"><div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
     <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span><span class="min-w-0"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span></span></button>
-    <div class="flex items-center gap-2"><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button></div>
+    <nav class="hidden items-center gap-5 sm:flex" aria-label="Main navigation"><button type="button" onclick="go('home')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button><button type="button" onclick="go('public')" class="${v==='public'?'border-b-2 border-emerald-500 pb-0.5 ':''}text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Resident Survey</button><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button></nav>
+    ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-pine-800 hover:bg-pine-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700 sm:hidden')}
+  </div>
+  <div id="mnav" class="hidden border-t border-slate-200 bg-white sm:hidden">
+    <button type="button" onclick="go('home')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Home</button>
+    <button type="button" onclick="go('public')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Resident Survey</button>
+    <button type="button" onclick="go('status')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Check status</button>
   </div></header>
   <main class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:py-10"><div class="${animateNext?'animate-fade-up':''}">
     <div class="mb-6"><h1 class="text-2xl font-semibold tracking-tight text-slate-900">${title}</h1><p class="mt-1 text-sm text-slate-500">${subtitle}</p></div>
