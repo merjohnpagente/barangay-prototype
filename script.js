@@ -177,7 +177,7 @@ function linkSpouse(uid,spouseUid){
   sp.spouseUid=uid;sp.spouse=me.name;
   me.spouseUid=sp.uid;me.spouse=sp.name;
 }
-const ageDash=()=>{const c=ageCounts();return [['Under 18','0–17 years','text-sky-600'],['Adult','18–59 years','text-pine-700'],['Senior Citizen','60 years and above','text-amber-500']].map(([k,cap,tone])=>dashStat(c[k],k,cap,usersIcon,tone)).join('')};
+const ageDash=()=>{const c=ageCounts();return [['Under 18','0–17 years','text-sky-600'],['Adult','18–59 years','text-pine-700'],['Senior Citizen','60 years and above','text-slate-500']].map(([k,cap,tone])=>dashStat(c[k],k,cap,usersIcon,tone)).join('')};
 const summary=()=>({total:residents.length,pwd:residents.filter(r=>r.pwd==='Yes').length});
 const saveResident=rec=>{residents.unshift(rec);persist()};
 
@@ -202,7 +202,7 @@ const logoutIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 
 const navItems=[['dashboard','Dashboard'],['records','Residents'],['submissions','Submissions'],['survey','Survey']];
 const navGroups=[['Overview',navItems.slice(0,1)],['Records',navItems.slice(1)]];
-const navBtn=(k,l)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'} flex items-center justify-between gap-2">${l}${k==='submissions'&&pendingCount()?`<span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">${pendingCount()}</span>`:''}</button>`;
+const navBtn=(k,l)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'} flex items-center justify-between gap-2">${l}${k==='submissions'&&pendingCount()?`<span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">${pendingCount()}</span>`:''}</button>`;
 const navGroupMarkup=()=>navGroups.map(([label,items])=>`<div><p class="px-3 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">${label}</p><div class="space-y-0.5">${items.map(([k,l])=>navBtn(k,l)).join('')}</div></div>`).join('');
 const logoutBtn=`<button type="button" onclick="logout()" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-red-50 hover:text-red-700">${logoutIcon}Logout</button>`;
 const userCard=`<div class="mx-3 mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-pine-700 text-sm font-bold text-white">SA</span><div class="min-w-0"><p class="truncate text-xs font-semibold text-slate-900">System Admin</p><span class="mt-1 inline-flex rounded-full bg-pine-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-pine-700">Admin</span></div></div>`;
@@ -405,109 +405,109 @@ function toggleMenu(){
 
 const menuBtn=(cls)=>`<button id="mbtn" type="button" onclick="toggleMenu()" aria-label="Menu" aria-expanded="false" aria-controls="mnav" class="${cls}"><svg class="ic-open h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="ic-close hidden h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
 function toggleMenu(){const m=document.getElementById('mnav'),b=document.getElementById('mbtn');if(!m||!b)return;const open=m.classList.toggle('hidden')===false;b.setAttribute('aria-expanded',open);b.querySelector('.ic-open').classList.toggle('hidden',open);b.querySelector('.ic-close').classList.toggle('hidden',!open)}
-const hNav='text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75 transition-colors hover:text-white';
+const hNav='text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600 transition-colors hover:text-orange-600';
 const hFeatures=[[usersIcon,'Resident survey','Fill out your personal, family, housing and contact details online. No login needed.'],[checkIcon,'Request tracking','Use your reference code to see if your submission was accepted or declined.'],[heartIcon,'Complete profile','Personal, physical, family, housing and sectoral information in one form.'],[lockIcon,'Admin review','Barangay staff review every submission before it is added to the resident records.']];
 const hSteps=[['01','Fill out the survey','Answer the resident survey form. It only takes a few minutes.'],['02','Save your reference code','You get a code after submitting. Keep it so you can check later.'],['03','Check your status','See if the barangay admin accepted or declined your submission.']];
 function home(){
   const total=residents.length;
-  return `<div id="top" class="relative min-h-screen overflow-x-hidden bg-[#06130e] text-white">
-  <header class="sticky top-0 z-30 border-b border-white/10 bg-[#06130e]/90 backdrop-blur">
+  return `<div id="top" class="relative min-h-screen overflow-x-hidden bg-white text-slate-900">
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-      <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+      <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">
         <span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span>
-        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-white">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-emerald-400">Tangub City</span></span>
+        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-slate-900">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-orange-600">Tangub City</span></span>
       </button>
       <nav class="flex items-center gap-4 sm:gap-7" aria-label="Main navigation">
-        <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="${hNav} hidden border-b-2 border-emerald-400 pb-0.5 text-white sm:inline">Home</button>
+        <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="${hNav} hidden border-b-2 border-orange-400 pb-0.5 text-slate-900 sm:inline">Home</button>
         <button type="button" onclick="go('public')" class="${hNav} hidden sm:inline">Resident Survey</button>
-        <button type="button" onclick="go('login')" class="rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold uppercase sm:px-4 tracking-[0.14em] text-[#06130e] shadow-[0_0_24px_-6px_rgba(52,211,153,.9)] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Log in</button>
+        <button type="button" onclick="go('login')" class="rounded-lg bg-orange-500 px-3 py-2 text-[11px] font-bold uppercase sm:px-4 tracking-[0.14em] text-white shadow-[0_0_24px_-6px_rgba(249,115,22,.55)] hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Log in</button>
       </nav>
-      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:hidden')}
+      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-slate-900 hover:bg-orange-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 sm:hidden')}
     </div>
-    <div id="mnav" class="hidden border-t border-white/10 sm:hidden">
-      <button type="button" onclick="toggleMenu();window.scrollTo({top:0,behavior:'smooth'})" class="block w-full border-b border-white/10 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Home</button>
-      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Resident Survey</button>
+    <div id="mnav" class="hidden border-t border-slate-200 sm:hidden">
+      <button type="button" onclick="toggleMenu();window.scrollTo({top:0,behavior:'smooth'})" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Home</button>
+      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Resident Survey</button>
     </div>
   </header>
 
   <section class="relative isolate flex min-h-[calc(100vh-61px)] items-center overflow-hidden">
     <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(31,90,76,.55),transparent_60%)]"></div>
-      <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-emerald-500/10 blur-[120px] animate-drift"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(251,146,60,.28),transparent_60%)]"></div>
+      <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-orange-500/10 blur-[120px] animate-drift"></div>
       <img src="assets/barangay-logo.jpg" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 rounded-full object-cover opacity-[.12] grayscale sm:right-[4%] sm:h-[34rem] sm:w-[34rem]">
-      <div class="absolute inset-0 bg-gradient-to-r from-[#06130e] via-[#06130e]/70 to-transparent"></div>
-      <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#06130e] to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-white via-white/70 to-transparent"></div>
+      <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent"></div>
     </div>
     <div class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
       <div class="max-w-2xl">
-        <span class="reveal inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>Web-based resident survey</span>
+        <span class="reveal inline-flex items-center gap-2 rounded-full border border-orange-400/30 bg-orange-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700"><span class="h-1.5 w-1.5 rounded-full bg-orange-400"></span>Web-based resident survey</span>
         <h1 class="mt-5">
           <span class="reveal block text-5xl font-extrabold italic leading-none tracking-tight sm:text-7xl" style="--d:80ms">Be Counted!</span>
-          <span class="reveal mt-2 block text-sm font-semibold italic text-white/90 sm:text-lg" style="--d:140ms">Help us keep Barangay Migcanaway's records updated</span>
-          <span class="reveal mt-2 block text-4xl font-extrabold italic leading-none tracking-tight text-emerald-400 sm:text-6xl" style="--d:200ms">Take the Survey</span>
+          <span class="reveal mt-2 block text-sm font-semibold italic text-slate-600 sm:text-lg" style="--d:140ms">Help us keep Barangay Migcanaway's records updated</span>
+          <span class="reveal mt-2 block text-4xl font-extrabold italic leading-none tracking-tight text-orange-500 sm:text-6xl" style="--d:200ms">Take the Survey</span>
           <span class="reveal block text-7xl font-black italic leading-[.95] tracking-tight sm:text-9xl" style="--d:260ms">TODAY</span>
         </h1>
-        <p class="reveal mt-6 max-w-xl text-sm leading-6 text-white/75 sm:text-base" style="--d:320ms">A resident survey system for Barangay Migcanaway, Tangub City. Submit your household details online, then track whether your submission was accepted, all in one place.</p>
+        <p class="reveal mt-6 max-w-xl text-sm leading-6 text-slate-600 sm:text-base" style="--d:320ms">A resident survey system for Barangay Migcanaway, Tangub City. Submit your household details online, then track whether your submission was accepted, all in one place.</p>
         <div class="reveal mt-7 flex flex-wrap items-center gap-3" style="--d:380ms">
-          <button type="button" onclick="go('public')" class="-skew-x-12 bg-white px-6 py-3.5 text-sm font-bold text-[#06130e] transition-colors hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"><span class="inline-block skew-x-12">&rarr; Take the Survey</span></button>
-          <button type="button" onclick="go('status')" class="rounded-lg border border-emerald-400/50 px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-300 transition-colors hover:bg-emerald-400/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">Check status</button>
+          <button type="button" onclick="go('public')" class="-skew-x-12 bg-orange-500 px-6 py-3.5 text-sm font-bold text-slate-900 transition-colors hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"><span class="inline-block skew-x-12">&rarr; Take the Survey</span></button>
+          <button type="button" onclick="go('status')" class="rounded-lg border border-orange-400/50 px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.14em] text-orange-700 transition-colors hover:bg-orange-400/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Check status</button>
         </div>
-        <div class="reveal mt-7 inline-flex items-center gap-5 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur" style="--d:440ms">
-          <div class="text-center"><p class="text-2xl font-bold text-emerald-400">${total}</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/70">Residents</p></div>
-          <span class="h-8 w-px bg-white/15"></span>
-          <div class="text-center"><p class="text-2xl font-bold text-emerald-400">${puroks.length}</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/70">Puroks</p></div>
+        <div class="reveal mt-7 inline-flex items-center gap-5 rounded-2xl border border-slate-200 bg-white/70 px-6 py-4 backdrop-blur" style="--d:440ms">
+          <div class="text-center"><p class="text-2xl font-bold text-orange-500">${total}</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">Residents</p></div>
+          <span class="h-8 w-px bg-slate-200"></span>
+          <div class="text-center"><p class="text-2xl font-bold text-orange-500">${puroks.length}</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">Puroks</p></div>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="features" class="scroll-mt-16 border-t border-white/10 bg-[#081a13] py-16 sm:py-20">
+  <section id="features" class="scroll-mt-16 border-t border-slate-200 bg-orange-50/60 py-16 sm:py-20">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-400">Features</p>
+      <p class="text-[10px] font-semibold uppercase tracking-[0.3em] text-orange-600">Features</p>
       <h2 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Everything in one place</h2>
       <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        ${hFeatures.map(([ic,t,d])=>`<div class="rounded-2xl border border-white/10 bg-white/[.04] p-5 transition-colors hover:border-emerald-400/40"><span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-400/10 text-emerald-400">${ic}</span><h3 class="mt-4 text-sm font-semibold text-white">${t}</h3><p class="mt-1.5 text-sm leading-6 text-white/65">${d}</p></div>`).join('')}
+        ${hFeatures.map(([ic,t,d])=>`<div class="rounded-2xl border border-slate-200 bg-orange-50/60 p-5 transition-colors hover:border-orange-400/40"><span class="grid h-10 w-10 place-items-center rounded-xl bg-orange-400/10 text-orange-600">${ic}</span><h3 class="mt-4 text-sm font-semibold text-slate-900">${t}</h3><p class="mt-1.5 text-sm leading-6 text-slate-600">${d}</p></div>`).join('')}
       </div>
     </div>
   </section>
 
-  <section id="how" class="scroll-mt-16 border-t border-white/10 py-16 sm:py-20">
+  <section id="how" class="scroll-mt-16 border-t border-slate-200 py-16 sm:py-20">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-400">How it works</p>
+      <p class="text-[10px] font-semibold uppercase tracking-[0.3em] text-orange-600">How it works</p>
       <h2 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Three simple steps</h2>
       <div class="mt-8 grid gap-4 sm:grid-cols-3">
-        ${hSteps.map(([n,t,d])=>`<div class="rounded-2xl border border-white/10 bg-white/[.04] p-5"><p class="text-3xl font-extrabold italic text-emerald-400">${n}</p><h3 class="mt-3 text-sm font-semibold text-white">${t}</h3><p class="mt-1.5 text-sm leading-6 text-white/65">${d}</p></div>`).join('')}
+        ${hSteps.map(([n,t,d])=>`<div class="rounded-2xl border border-slate-200 bg-orange-50/60 p-5"><p class="text-3xl font-extrabold italic text-orange-600">${n}</p><h3 class="mt-3 text-sm font-semibold text-slate-900">${t}</h3><p class="mt-1.5 text-sm leading-6 text-slate-600">${d}</p></div>`).join('')}
       </div>
       <div class="mt-10 flex flex-wrap items-center gap-3">
-        <button type="button" onclick="go('public')" class="rounded-lg bg-emerald-400 px-5 py-3 text-sm font-bold text-[#06130e] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Take the Survey</button>
-        <button type="button" onclick="go('login')" class="rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">Admin log in</button>
+        <button type="button" onclick="go('public')" class="rounded-lg bg-orange-500 px-5 py-3 text-sm font-bold text-white hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Take the Survey</button>
+        <button type="button" onclick="go('login')" class="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-orange-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Admin log in</button>
       </div>
     </div>
   </section>
 
-  <footer class="border-t border-white/10 px-4 py-6 text-center text-xs text-white/50">&copy; ${new Date().getFullYear()} Barangay Migcanaway, Tangub City &middot; Resident Survey System</footer>
+  <footer class="border-t border-slate-200 px-4 py-6 text-center text-xs text-slate-500">&copy; ${new Date().getFullYear()} Barangay Migcanaway, Tangub City &middot; Resident Survey System</footer>
 </div>`;
 }
 
 function login(){
   return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
-  <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
-  <header class="absolute inset-x-0 top-0 z-30 border-b border-white/10 bg-[#06130e]/90 backdrop-blur">
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-orange-100/60 blur-[120px] animate-drift"></div></div>
+  <header class="absolute inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-      <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+      <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">
         <span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span>
-        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-white">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-emerald-400">Tangub City</span></span>
+        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-slate-900">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-orange-600">Tangub City</span></span>
       </button>
       <nav class="hidden items-center gap-4 sm:flex sm:gap-7" aria-label="Main navigation">
-        <button type="button" onclick="go('home')" class="${hNav} border-b-2 border-emerald-400 pb-0.5 text-white">Home</button>
+        <button type="button" onclick="go('home')" class="${hNav} border-b-2 border-orange-400 pb-0.5 text-slate-900">Home</button>
         <button type="button" onclick="go('public')" class="${hNav}">Resident Survey</button>
-        <button type="button" onclick="go('login')" class="rounded-lg bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#06130e] shadow-[0_0_24px_-6px_rgba(52,211,153,.9)] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Log in</button>
+        <button type="button" onclick="go('login')" class="rounded-lg bg-orange-500 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_0_24px_-6px_rgba(249,115,22,.55)] hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Log in</button>
       </nav>
-      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:hidden')}
+      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-slate-900 hover:bg-orange-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 sm:hidden')}
     </div>
-    <div id="mnav" class="hidden border-t border-white/10 sm:hidden">
-      <button type="button" onclick="go('home')" class="block w-full border-b border-white/10 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Home</button>
-      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Resident Survey</button>
+    <div id="mnav" class="hidden border-t border-slate-200 sm:hidden">
+      <button type="button" onclick="go('home')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Home</button>
+      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Resident Survey</button>
     </div>
   </header>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
@@ -533,7 +533,7 @@ function dashboard(){
   const stats=[[s.total,'Total residents','Registered residents',usersIcon,'text-pine-700'],[s.pwd,'PWD residents','Persons with disability',heartIcon,'text-pine-600']];
   return shell('Dashboard','A quick look at the residents of the barangay.',`<section class="relative mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
     <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(23,69,59,0.09),transparent_48%)]" aria-hidden="true"></div>
-    <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview · Tangub City</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's an overview of the resident records today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('records')">View residents</button>${pendingCount()?`<button type="button" class="${btn} border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100" onclick="go('submissions')">Review ${pendingCount()} pending</button>`:''}</div></div>
+    <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview · Tangub City</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's an overview of the resident records today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('records')">View residents</button>${pendingCount()?`<button type="button" class="${btn} border border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100" onclick="go('submissions')">Review ${pendingCount()} pending</button>`:''}</div></div>
   </section>
   <div class="grid grid-cols-2 gap-3">${stats.map(([n,l,cap,icon,tone])=>dashStat(n,l,cap,icon,tone)).join('')}</div>
   <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">${ageDash()}</div>
@@ -654,7 +654,7 @@ function residentModal(ro,footer,cf='closeResident()'){
   const kids=(Array.isArray(r.children)?r.children:[]).map(childView);
   const row=(l,val)=>`<div><dt class="text-[11px] font-medium uppercase tracking-wide text-slate-400">${l}</dt><dd class="mt-0.5 text-sm text-slate-800">${val===''||val==null?'—':esc(val)}</dd></div>`;
   const here=kids.filter(c=>c.here!=='No').length;
-  const kidList=kids.length?kids.map(c=>`<li class="flex items-center justify-between gap-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-900">${esc(c.name)}</p><p class="text-xs text-slate-500">${c.age===''||c.age==null?'Age not recorded':esc(c.age)+' years old'}${c.linked?' · In system':''}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${c.here==='No'?'bg-amber-50 text-amber-700':'bg-emerald-50 text-emerald-700'}">${c.here==='No'?'Non-resident':'Resident'}</span></li>`).join(''):`<li class="py-3 text-sm text-slate-500">No children recorded.</li>`;
+  const kidList=kids.length?kids.map(c=>`<li class="flex items-center justify-between gap-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-900">${esc(c.name)}</p><p class="text-xs text-slate-500">${c.age===''||c.age==null?'Age not recorded':esc(c.age)+' years old'}${c.linked?' · In system':''}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${c.here==='No'?'bg-slate-50 text-slate-700':'bg-orange-50 text-orange-700'}">${c.here==='No'?'Non-resident':'Resident'}</span></li>`).join(''):`<li class="py-3 text-sm text-slate-500">No children recorded.</li>`;
   return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)${cf}" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'New submission')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="${cf}" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
@@ -930,7 +930,7 @@ function publicShell(body,title='Resident Survey Form',subtitle='Fill out your d
   return `<div class="relative min-h-screen bg-cream text-slate-900">
   <header class="border-b border-slate-200 bg-white"><div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
     <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span><span class="min-w-0"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span></span></button>
-    <nav class="hidden items-center gap-5 sm:flex" aria-label="Main navigation"><button type="button" onclick="go('home')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button><button type="button" onclick="go('public')" class="${v==='public'?'border-b-2 border-emerald-500 pb-0.5 ':''}text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Resident Survey</button><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button><button type="button" onclick="go('login')" class="${btnPrimary}">Log in</button></nav>
+    <nav class="hidden items-center gap-5 sm:flex" aria-label="Main navigation"><button type="button" onclick="go('home')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button><button type="button" onclick="go('public')" class="${v==='public'?'border-b-2 border-orange-500 pb-0.5 ':''}text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Resident Survey</button><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button><button type="button" onclick="go('login')" class="${btnPrimary}">Log in</button></nav>
     <div class="ml-auto flex items-center gap-1.5 sm:hidden"><button type="button" onclick="go('status')" class="${btnGhost} !px-3 !py-2 text-xs">Check status</button><button type="button" onclick="go('login')" class="${btnPrimary} !px-3 !py-2 text-xs">Log in</button>${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-pine-800 hover:bg-pine-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700')}</div>
   </div>
   <div id="mnav" class="hidden border-t border-slate-200 bg-white sm:hidden">
@@ -964,7 +964,7 @@ function submitPublic(rec){
   go('thanks');
 }
 function thanks(){
-  return publicShell(`<div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center sm:p-9"><div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">${checkIcon}</div><h2 class="mt-4 text-lg font-semibold text-slate-900">Thank you! Your survey was submitted.</h2><p class="mt-2 text-sm leading-6 text-slate-500">The barangay admin will review your response. Once accepted, you will be added to the resident records.</p><div class="mt-5 rounded-xl bg-pine-50 px-4 py-3"><p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-pine-600">Your reference code</p><p class="mt-1 font-mono text-xl font-semibold tracking-wider text-pine-800">${esc(lastRef)}</p><p class="mt-1 text-xs text-slate-500">Save this code. Use it to check if your request was accepted or declined.</p></div><div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" class="${btnPrimary}" onclick="viewRef(lastRef)">Check status</button><button type="button" class="${btnGhost}" onclick="go('public')">Submit another response</button><button type="button" class="${btnGhost}" onclick="go('home')">Back to start</button></div></div>`,'Submitted','Your response has been sent to the barangay admin.');
+  return publicShell(`<div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center sm:p-9"><div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-orange-50 text-orange-600">${checkIcon}</div><h2 class="mt-4 text-lg font-semibold text-slate-900">Thank you! Your survey was submitted.</h2><p class="mt-2 text-sm leading-6 text-slate-500">The barangay admin will review your response. Once accepted, you will be added to the resident records.</p><div class="mt-5 rounded-xl bg-pine-50 px-4 py-3"><p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-pine-600">Your reference code</p><p class="mt-1 font-mono text-xl font-semibold tracking-wider text-pine-800">${esc(lastRef)}</p><p class="mt-1 text-xs text-slate-500">Save this code. Use it to check if your request was accepted or declined.</p></div><div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" class="${btnPrimary}" onclick="viewRef(lastRef)">Check status</button><button type="button" class="${btnGhost}" onclick="go('public')">Submit another response</button><button type="button" class="${btnGhost}" onclick="go('home')">Back to start</button></div></div>`,'Submitted','Your response has been sent to the barangay admin.');
 }
 
 function setSubTab(t){subTab=t;draw()}
@@ -984,8 +984,8 @@ function subModal(){
   const x=submissions[subIndex];
   if(!x)return '';
   const footer=x.status==='pending'
-    ?`${x.prevReason?`<div class="mt-6 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-800">Resubmitted after being declined · Previous comment: ${esc(x.prevReason)}</div>`:''}<div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDecline(${subIndex})">Decline</button><button type="button" class="${btnPrimary}" onclick="acceptSub(${subIndex})">Accept</button></div>`
-    :`<div class="mt-6 rounded-lg px-3 py-2.5 text-xs ${x.status==='accepted'?'bg-emerald-50 text-emerald-700':'bg-red-50 text-red-700'}">${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}${x.reason?` · Comment: ${esc(x.reason)}`:''}</div>`;
+    ?`${x.prevReason?`<div class="mt-6 rounded-lg bg-slate-50 px-3 py-2.5 text-xs text-slate-800">Resubmitted after being declined · Previous comment: ${esc(x.prevReason)}</div>`:''}<div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDecline(${subIndex})">Decline</button><button type="button" class="${btnPrimary}" onclick="acceptSub(${subIndex})">Accept</button></div>`
+    :`<div class="mt-6 rounded-lg px-3 py-2.5 text-xs ${x.status==='accepted'?'bg-orange-50 text-orange-700':'bg-red-50 text-red-700'}">${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}${x.reason?` · Comment: ${esc(x.reason)}`:''}</div>`;
   return residentModal(x.data,footer,'closeSub()');
 }
 function acceptSub(i){
@@ -1061,8 +1061,8 @@ function checkStatus(){
 }
 function statusCard(x){
   const t={
-    pending:['bg-amber-50 text-amber-800','border-amber-200','Under review','The barangay admin has not reviewed your survey yet. Please check again later.'],
-    accepted:['bg-emerald-50 text-emerald-800','border-emerald-200','Accepted','Your information has been added to the barangay resident records.'],
+    pending:['bg-slate-50 text-slate-800','border-slate-200','Under review','The barangay admin has not reviewed your survey yet. Please check again later.'],
+    accepted:['bg-orange-50 text-orange-800','border-orange-200','Accepted','Your information has been added to the barangay resident records.'],
     declined:['bg-red-50 text-red-800','border-red-200','Declined','Your survey was not accepted.']
   }[x.status]||['bg-slate-50 text-slate-700','border-slate-200',x.status,''];
   const when=x.status==='pending'?`Submitted ${fmtDT(x.submittedAt)}`:`${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}`;
@@ -1073,7 +1073,7 @@ function statusView(){
   const found=statusRef?submissions.find(x=>x.ref===statusRef):null;
   const mine=myRefs().map(r=>submissions.find(x=>x.ref===r)).filter(Boolean);
   const result=statusRef&&!statusErr?(found?statusCard(found):`<p role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">No request found for <span class="font-mono">${esc(statusRef)}</span>. Check the code and try again.</p>`):'';
-  const list=mine.length?`<div class="rounded-2xl border border-slate-200 bg-white p-5"><h2 class="text-sm font-semibold text-slate-900">Your requests on this device</h2><ul class="mt-2 divide-y divide-slate-100">${mine.map(x=>`<li><button type="button" onclick="viewRef('${esc(x.ref)}')" class="flex w-full items-center justify-between gap-3 py-2.5 text-left"><span class="min-w-0"><span class="block truncate text-sm font-medium text-slate-900">${esc(x.data.name)}</span><span class="block font-mono text-xs text-slate-500">${esc(x.ref)}</span></span><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${x.status==='accepted'?'bg-emerald-50 text-emerald-700':x.status==='declined'?'bg-red-50 text-red-700':'bg-amber-50 text-amber-700'}">${x.status==='accepted'?'Accepted':x.status==='declined'?'Declined':'Under review'}</span></button></li>`).join('')}</ul></div>`:'';
+  const list=mine.length?`<div class="rounded-2xl border border-slate-200 bg-white p-5"><h2 class="text-sm font-semibold text-slate-900">Your requests on this device</h2><ul class="mt-2 divide-y divide-slate-100">${mine.map(x=>`<li><button type="button" onclick="viewRef('${esc(x.ref)}')" class="flex w-full items-center justify-between gap-3 py-2.5 text-left"><span class="min-w-0"><span class="block truncate text-sm font-medium text-slate-900">${esc(x.data.name)}</span><span class="block font-mono text-xs text-slate-500">${esc(x.ref)}</span></span><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${x.status==='accepted'?'bg-orange-50 text-orange-700':x.status==='declined'?'bg-red-50 text-red-700':'bg-slate-50 text-slate-700'}">${x.status==='accepted'?'Accepted':x.status==='declined'?'Declined':'Under review'}</span></button></li>`).join('')}</ul></div>`:'';
   return publicShell(`<div class="mx-auto max-w-md space-y-4"><form class="rounded-2xl border border-slate-200 bg-white p-5" onsubmit="event.preventDefault();checkStatus()"><label class="${labelCls}" for="ref">Reference code</label><input id="ref" class="${field} font-mono uppercase" placeholder="SUB-XXXXXX" value="${esc(statusRef)}" autocapitalize="characters" autocomplete="off">${statusErr?`<p role="alert" class="mt-2 text-xs font-medium text-red-600">${statusErr}</p>`:''}<button type="submit" class="${btnPrimary} mt-4 w-full">Check status</button></form>${result}${list}</div>`,'Check Request Status','Enter the reference code you received after submitting your survey.');
 }
 ensureRefs();
