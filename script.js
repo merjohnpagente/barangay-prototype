@@ -481,7 +481,7 @@ function survey(){
     <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Other information</h2><p class="mt-0.5 text-xs text-slate-500">Contact, employment, voter and program details, plus notes.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" onchange="syncPwd()" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" onchange="syncPwd()" ${r.pwd==='No'?'checked':''}>No</label></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="contact">Contact number</label><input id="contact" type="tel" inputmode="tel" class="${field}" placeholder="09XXXXXXXXX" pattern="(09|[+]639)[0-9]{9}" title="Use 09XXXXXXXXX or +639XXXXXXXXX" value="${esc(r.contact||'')}"></div>
-      <div id="pwd-extra" class="grid grid-cols-1 gap-x-4 gap-y-5 sm:col-span-6 sm:grid-cols-6 ${r.pwd==='Yes'?'':'hidden'}"><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-type">Type of PWD</label>${so(pwdTypes,r.pwdType).replace('<select','<select id="pwd-type"')}</div><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-id">PWD ID number</label><input id="pwd-id" class="${field}" placeholder="e.g. 10-4208-000-0000000" autocomplete="off" value="${esc(r.pwdId||'')}"></div></div>
+      <div id="pwd-extra" class="grid grid-cols-1 gap-x-4 gap-y-5 sm:col-span-6 sm:grid-cols-6 ${r.pwd==='Yes'?'':'hidden'}"><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-type">Type of PWD</label>${so(pwdTypes,r.pwdType).replace('<select','<select id="pwd-type"'+(r.pwd==='Yes'?' required':''))}</div><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-id">PWD ID number</label><input id="pwd-id" class="${field}" placeholder="e.g. 10-4208-000-0000000" autocomplete="off" value="${esc(r.pwdId||'')}"></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="employment">Employment status</label>${so(['Employed','Self-employed','Unemployed','Student','Retired'],r.employment).replace('<select','<select id="employment"')}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${yn('voter',r.voter)}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">4Ps beneficiary</span>${yn('fourps',r.fourPs)}</div>
@@ -541,7 +541,9 @@ function syncPwd(){
   const yes=(document.querySelector('input[name="pwd"]:checked')||{}).value==='Yes';
   const box=document.getElementById('pwd-extra');
   if(box)box.classList.toggle('hidden',!yes);
-  if(!yes){const t=document.getElementById('pwd-type'),i=document.getElementById('pwd-id');if(t)t.value='';if(i)i.value=''}
+  const t=document.getElementById('pwd-type'),i=document.getElementById('pwd-id');
+  if(t)t.required=yes;
+  if(!yes){if(t)t.value='';if(i)i.value=''}
 }
 function syncCivil(){
   const v=((document.getElementById('age')||{}).value||'').trim();
