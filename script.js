@@ -84,8 +84,8 @@ const ageOf=r=>{
   const y=new Date().getFullYear();
   return Number(r.age||0)+Math.max(0,y-(Number(r.ageYear)||y));
 };
-const ageGroup=r=>{const a=ageOf(r);if(a===''||a==null||isNaN(Number(a)))return '';return a<18?'Bata':a>=60?'Senior Citizen':'Adult'};
-const ageCounts=(list=residents)=>{const c={'Bata':0,'Adult':0,'Senior Citizen':0};list.forEach(r=>{const g=ageGroup(r);if(g)c[g]++});return c};
+const ageGroup=r=>{const a=ageOf(r);if(a===''||a==null||isNaN(Number(a)))return '';return a<18?'Under 18':a>=60?'Senior Citizen':'Adult'};
+const ageCounts=(list=residents)=>{const c={'Under 18':0,'Adult':0,'Senior Citizen':0};list.forEach(r=>{const g=ageGroup(r);if(g)c[g]++});return c};
 const byUid=u=>u?residents.find(r=>r.uid===u):undefined;
 const childView=c=>{const l=byUid(c.uid);return l?{...c,name:l.name,age:ageOf(l),here:'Yes',linked:true}:c};
 const spouseName=r=>{const l=byUid(r.spouseUid);return l?l.name:(r.spouse||'')};
@@ -115,7 +115,7 @@ function linkSpouse(uid,spouseUid){
   sp.spouseUid=uid;sp.spouse=me.name;
   me.spouseUid=sp.uid;me.spouse=sp.name;
 }
-const ageDash=()=>{const c=ageCounts();return [['Bata','0–17 years','text-sky-600'],['Adult','18–59 years','text-pine-700'],['Senior Citizen','60 years and above','text-amber-500']].map(([k,cap,tone])=>dashStat(c[k],k,cap,usersIcon,tone)).join('')};
+const ageDash=()=>{const c=ageCounts();return [['Under 18','0–17 years','text-sky-600'],['Adult','18–59 years','text-pine-700'],['Senior Citizen','60 years and above','text-amber-500']].map(([k,cap,tone])=>dashStat(c[k],k,cap,usersIcon,tone)).join('')};
 const summary=()=>({total:residents.length,pwd:residents.filter(r=>r.pwd==='Yes').length});
 const saveResident=rec=>{residents.unshift(rec);persist()};
 
@@ -566,7 +566,7 @@ function printResidents(){
   if(!root){root=document.createElement('div');root.id='print-root';document.body.appendChild(root)}
   root.innerHTML=`<div class="p-2 text-slate-900">
     <div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="" class="h-16 w-16 rounded-full object-cover"><div class="text-center"><p class="text-xs uppercase tracking-widest">Republic of the Philippines · City of Tangub</p><h1 class="text-xl font-bold tracking-wide">BARANGAY MIGCANAWAY</h1><p class="text-sm font-semibold">Resident Survey — List of Residents${scope?' · '+esc(scope):''}</p></div><img src="assets/tangub-logo.jpg" alt="" class="h-16 w-16 object-contain"></div>
-    <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong> · PWD: <strong>${list.filter(r=>r.pwd==='Yes').length}</strong>${['Bata','Adult','Senior Citizen'].map(g=>` · ${g}: <strong>${list.filter(r=>ageGroup(r)===g).length}</strong>`).join('')}</span><span>Printed on ${date}</span></p>
+    <p class="mt-4 flex justify-between text-xs"><span>Total residents: <strong>${list.length}</strong> · PWD: <strong>${list.filter(r=>r.pwd==='Yes').length}</strong>${['Under 18','Adult','Senior Citizen'].map(g=>` · ${g}: <strong>${list.filter(r=>ageGroup(r)===g).length}</strong>`).join('')}</span><span>Printed on ${date}</span></p>
     <table class="mt-2 w-full border-collapse text-xs"><thead>${['No.','ID','Name','Purok','Age','Sex','Civil status','Work','PWD'].map(th).join('')}</thead><tbody>${rows||'<tr><td colspan="9" class="border border-slate-300 px-2 py-4 text-center text-slate-500">No residents found.</td></tr>'}</tbody></table>
   </div>`;
   document.body.classList.add('print-residents');
@@ -612,7 +612,7 @@ function recs(){
     <select id="filter" class="${field} min-w-0 flex-1 sm:w-48 sm:flex-none" aria-label="Filter residents" onchange="setFilter(this.value)">
       <option value="all" ${filterBy==='all'?'selected':''}>All residents</option>
       <optgroup label="Civil status">${['Single','Married','Widowed','Separated','Annulled'].map(x=>`<option value="${x}" ${filterBy===x?'selected':''}>${x}</option>`).join('')}</optgroup>
-      <optgroup label="Age group">${[['Bata','Bata (0–17)'],['Adult','Adult (18–59)'],['Senior Citizen','Senior Citizen (60+)']].map(([k,l])=>`<option value="age:${k}" ${filterBy==='age:'+k?'selected':''}>${l}</option>`).join('')}</optgroup>
+      <optgroup label="Age group">${[['Under 18','Under 18 (0–17)'],['Adult','Adult (18–59)'],['Senior Citizen','Senior Citizen (60+)']].map(([k,l])=>`<option value="age:${k}" ${filterBy==='age:'+k?'selected':''}>${l}</option>`).join('')}</optgroup>
       <option value="pwd" ${filterBy==='pwd'?'selected':''}>PWD residents</option>
     </select>
     </div>
