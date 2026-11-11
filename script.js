@@ -492,15 +492,19 @@ function home(){
 function login(){
   return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
-  <header class="absolute inset-x-0 top-0 z-20">
-    <div class="mx-auto flex max-w-6xl items-center justify-end gap-5 px-4 py-4 sm:gap-7 sm:px-6">
-      <nav class="hidden items-center gap-5 sm:flex sm:gap-7" aria-label="Main navigation">
+  <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">
+        <span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span>
+        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-pine-800">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-pine-600">Tangub City</span></span>
+      </button>
+      <nav class="hidden items-center gap-4 sm:flex sm:gap-7" aria-label="Main navigation">
         <button type="button" onclick="go('home')" class="border-b-2 border-emerald-500 pb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button>
-        <button type="button" onclick="go('public')" class="rounded-lg bg-pine-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-pine-800">Resident Survey</button>
+        <button type="button" onclick="go('public')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Resident Survey</button>
       </nav>
       ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-pine-800 hover:bg-pine-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700 sm:hidden')}
     </div>
-    <div id="mnav" class="hidden border-y border-slate-200 bg-white/95 shadow-sm backdrop-blur sm:hidden">
+    <div id="mnav" class="hidden border-t border-slate-200 bg-white sm:hidden">
       <button type="button" onclick="go('home')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Home</button>
       <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Resident Survey</button>
     </div>
