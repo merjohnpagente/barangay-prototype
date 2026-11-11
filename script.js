@@ -431,7 +431,7 @@ function home(){
     </div>
   </header>
 
-  <section class="relative isolate flex min-h-[calc(100vh-61px)] items-center overflow-hidden">
+  <section class="relative isolate flex min-h-[calc(100vh-61px)] items-start overflow-hidden">
     <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(251,146,60,.28),transparent_60%)]"></div>
       <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-orange-500/10 blur-[120px] animate-drift"></div>
@@ -439,7 +439,7 @@ function home(){
       <div class="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent sm:w-[45%] sm:via-white/50"></div>
       <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent sm:h-0"></div>
     </div>
-    <div class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+    <div class="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
       <div class="max-w-2xl">
         <span class="reveal inline-flex items-center gap-2 rounded-full border border-orange-400/30 bg-orange-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700"><span class="h-1.5 w-1.5 rounded-full bg-orange-400"></span>Web-based resident survey</span>
         <h1 class="mt-5">
