@@ -469,7 +469,7 @@ function survey(){
     <section><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p></div><div class="flex items-center gap-2">${editing?`<span class="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span>`:''}<button type="button" onclick="go('records')" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close and return to Residents" title="Close">${closeIcon}</button></div></div><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       ${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<div class="sm:col-span-2"><label class="${labelCls}" for="${k}name">${l}</label><input id="${k}name" class="${field}" placeholder="${l}" value="${esc(nm[k])}" ${k!=='middle'?'required':''} oninput="clearFormError()"></div>`).join('')}
       <p id="form-error" class="hidden text-xs font-medium text-red-600 sm:col-span-6 sm:-mt-3" role="alert"></p>
-      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}" onchange="syncCivil()"></div>
+      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}" oninput="syncBirthYear()" onchange="syncBirthYear()"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
       <div id="civil-wrap" class="sm:col-span-2 ${editing&&ageOf(r)!==''&&Number(ageOf(r))<18?'hidden':''}"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
@@ -483,7 +483,7 @@ function survey(){
       <div class="sm:col-span-3"><label class="${labelCls}" for="contact">Contact number</label><input id="contact" type="tel" inputmode="tel" class="${field}" placeholder="09XXXXXXXXX" pattern="(09|[+]639)[0-9]{9}" title="Use 09XXXXXXXXX or +639XXXXXXXXX" value="${esc(r.contact||'')}"></div>
       <div id="pwd-extra" class="grid grid-cols-1 gap-x-4 gap-y-5 sm:col-span-6 sm:grid-cols-6 ${r.pwd==='Yes'?'':'hidden'}"><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-type">Type of PWD</label>${so(pwdTypes,r.pwdType).replace('<select','<select id="pwd-type"'+(r.pwd==='Yes'?' required':''))}</div><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-id">PWD ID number</label><input id="pwd-id" class="${field}" placeholder="e.g. 10-4208-000-0000000" autocomplete="off" value="${esc(r.pwdId||'')}"></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="employment">Employment status</label>${so(['Employed','Self-employed','Unemployed','Student','Retired'],r.employment).replace('<select','<select id="employment"')}</div>
-      <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${yn('voter',r.voter)}</div>
+      <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${(()=>{const ra=editing?ageOf(r):'';const minorInit=ra!==''&&Number(ra)<18;const html=yn('voter',minorInit?'No':r.voter);return (minorInit?html.replace('value="Yes"','value="Yes" disabled'):html)+`<p id="voter-hint" class="mt-1 text-[11px] text-slate-400 ${minorInit?'':'hidden'}">Under 18 cannot be a registered voter.</p>`})()}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">4Ps beneficiary</span>${yn('fourps',r.fourPs)}</div>
       <div class="sm:col-span-6"><label class="${labelCls}" for="remarks">Remarks</label><textarea id="remarks" class="${field} min-h-[6rem] resize-y" placeholder="Type notes here...">${esc(r.remarks||'')}</textarea></div>
     </div></section>
@@ -509,7 +509,7 @@ function saveSurvey(){
   const id=editIndex>=0?residents[editIndex].id:makeId();
   const finalAge=computedAge===''?Number(val('age'))||'':computedAge;
   const isMinor=finalAge!==''&&Number(finalAge)<18;
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:(document.querySelector('input[name="voter"]:checked')||{}).value||'',fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(val('spouse-last'),val('spouse-first'),val('spouse-middle')),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''),fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
   if(editIndex>=0){
     residents[editIndex]=rec;
     linkSpouse(rec.uid,isMinor?'':val('spouse-link'));
@@ -537,6 +537,34 @@ function syncAge(){
   if(input)input.value=a;
   syncCivil();
 }
+function syncBirthYear(){
+  const ageEl=document.getElementById('age'),bEl=document.getElementById('birthday');
+  if(!ageEl||!bEl)return;
+  const v=ageEl.value.trim();
+  if(v===''||isNaN(Number(v))||Number(v)<0||Number(v)>120){syncCivil();return}
+  const age=Math.floor(Number(v));
+  const t=new Date();
+  const cur=bEl.value?new Date(`${bEl.value}T00:00:00`):null;
+  const month=cur&&!isNaN(cur)?cur.getMonth():t.getMonth();
+  const day=cur&&!isNaN(cur)?cur.getDate():t.getDate();
+  const pad=n=>String(n).padStart(2,'0');
+  for(const y of [t.getFullYear()-age,t.getFullYear()-age-1]){
+    const last=new Date(y,month+1,0).getDate();
+    const iso=`${y}-${pad(month+1)}-${pad(Math.min(day,last))}`;
+    if(ageFromBirthday(iso)===age){bEl.value=iso;break}
+  }
+  syncCivil();
+}
+function syncVoter(){
+  const v=((document.getElementById('age')||{}).value||'').trim();
+  const minor=v!==''&&Number(v)<18;
+  const yes=document.querySelector('input[name="voter"][value="Yes"]');
+  const no=document.querySelector('input[name="voter"][value="No"]');
+  const hint=document.getElementById('voter-hint');
+  if(yes)yes.disabled=minor;
+  if(minor&&no)no.checked=true;
+  if(hint)hint.classList.toggle('hidden',!minor);
+}
 function syncPwd(){
   const yes=(document.querySelector('input[name="pwd"]:checked')||{}).value==='Yes';
   const box=document.getElementById('pwd-extra');
@@ -546,6 +574,7 @@ function syncPwd(){
   if(!yes){if(t)t.value='';if(i)i.value=''}
 }
 function syncCivil(){
+  syncVoter();
   const v=((document.getElementById('age')||{}).value||'').trim();
   const minor=v!==''&&Number(v)<18;
   const wrap=document.getElementById('civil-wrap'),civil=document.getElementById('civil');
