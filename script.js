@@ -491,7 +491,7 @@ function home(){
 }
 
 function login(){
-  return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
+  return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 pb-12 pt-28">
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-orange-100/60 blur-[120px] animate-drift"></div></div>
   <header class="absolute inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
