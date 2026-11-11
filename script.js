@@ -579,7 +579,7 @@ function survey(){
       <div class="sm:col-span-2"><label class="${labelCls}" for="name-ext">Name extension</label>${so(nameExts,r.nameExt).replace('<select','<select id="name-ext"')}</div>
       <div class="sm:col-span-4"><label class="${labelCls}" for="birth-place">Place of birth</label><input id="birth-place" class="${field}" placeholder="City / municipality, province" value="${esc(r.birthPlace||'')}" oninput="capName(this)" autocapitalize="words" autocomplete="off"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}" oninput="syncBirthYear()" onchange="syncBirthYear()"></div>
-      <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" onchange="syncSpouse()"')}</div>
+      <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" required onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
       <div id="civil-wrap" class="sm:col-span-2 ${editing&&ageOf(r)!==''&&Number(ageOf(r))<18?'hidden':''}"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
       <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><select id="spouse-link" class="${field} mb-3 ${isPub()?'hidden':''}" aria-label="Link spouse already in the system" onchange="linkSpouseSel(this)"><option value="">Not in system — type name below</option>${residentOptions(spLinked?r.spouseUid:'',r.uid||'')}</select><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}" ${spLinked?'readonly':''} oninput="capName(this,${k==='middle'})" autocapitalize="words">`).join('')}</div></div>
@@ -616,7 +616,7 @@ function survey(){
 
 function saveSurvey(){
   const val=id=>(document.getElementById(id)||{}).value||'';
-  ['lastname','firstname','middlename','pwd-type','contact','work-other','em-name','em-contact','height','weight','email','voter-year'].forEach(clearFieldError);
+  ['lastname','firstname','middlename','sex','pwd-type','contact','work-other','em-name','em-contact','height','weight','email','voter-year'].forEach(clearFieldError);
   const errBox=document.getElementById('form-error');
   if(errBox){errBox.textContent='';errBox.classList.add('hidden')}
   const name=joinName(titleCase(val('lastname')),titleCase(val('firstname')),titleCase(val('middlename')));
@@ -624,6 +624,7 @@ function saveSurvey(){
   if(!val('lastname').trim())problems.push(['lastname','Last name is required.','Last name']);
   if(!val('firstname').trim())problems.push(['firstname','First name is required.','First name']);
   if(isInitialOnly(val('middlename')))problems.push(['middlename','Write the middle name in full, not just an initial.','Middle name']);
+  if(!val('sex'))problems.push(['sex','Select the sex.','Sex']);
   const pwdSel=document.querySelector('input[name="pwd"]:checked');
   if(pwdSel&&pwdSel.value==='Yes'&&!val('pwd-type'))problems.push(['pwd-type','Select the type of PWD.','Type of PWD']);
   if((document.getElementById('work-select')||{}).value==='Other'&&!val('work-other').trim())problems.push(['work-other','Type the occupation.','Work / occupation']);
