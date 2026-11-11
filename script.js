@@ -49,7 +49,7 @@ const pwdTypes=['Visual disability','Hearing disability','Speech and language im
 const pat=[['Yes'],['No'],['Yes'],['No'],['No']];
 const AUTH_KEY='barangay-session-v1';
 const VIEWS=['dashboard','records','survey','submissions'];
-const isPub=()=>v==='public'||v==='thanks';
+const isPub=()=>v==='public'||v==='thanks'||v==='status';
 const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return s==='assistance'?'records':s==='reports'?'dashboard':VIEWS.includes(s)?s:null}catch(e){return null}})();
 let animateNext=true;
 let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='',loginRole='',subTab='pending',subIndex=-1,declineIndex=-1;
@@ -111,7 +111,7 @@ const persist=()=>{renumber(residents);try{localStorage.setItem(STORE,JSON.strin
 const SUBS_KEY='barangay-submissions-v1';
 let submissions=(()=>{try{const x=JSON.parse(localStorage.getItem(SUBS_KEY));return Array.isArray(x)?x:[]}catch{return []}})();
 const persistSubs=()=>{try{localStorage.setItem(SUBS_KEY,JSON.stringify(submissions))}catch{}};
-const reloadSubs=()=>{try{const x=JSON.parse(localStorage.getItem(SUBS_KEY));if(Array.isArray(x))submissions=x}catch{}};
+const reloadSubs=()=>{try{const x=JSON.parse(localStorage.getItem(SUBS_KEY));if(Array.isArray(x))submissions=x}catch{}ensureRefs()};
 const pendingCount=()=>submissions.filter(x=>x.status==='pending').length;
 const fmtDT=iso=>{const d=new Date(iso);return iso&&!isNaN(d)?d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}):''};
 const makeId=()=>{
@@ -250,7 +250,7 @@ function shell(title,subtitle,body,actions=''){
 }
 
 function draw(){
-  const views={login,dashboard,survey,records:recs,submissions:subs,public:survey,thanks};
+  const views={login,dashboard,survey,records:recs,submissions:subs,public:survey,thanks,status:statusView};
   document.getElementById('app').innerHTML=views[v]();
   animateNext=false;
   renderModal();
@@ -418,6 +418,7 @@ function login(){
       <p class="text-center text-xs font-medium text-slate-500">Continue as</p>
       <button type="button" onclick="go('public')" class="hover-lift flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-pine-50 text-pine-700">${usersIcon}</span><span class="min-w-0"><span class="block text-sm font-semibold text-slate-900">Resident</span><span class="mt-0.5 block text-xs text-slate-500">No login needed. Fill out the survey form.</span></span></button>
       <button type="button" onclick="chooseAdmin()" class="hover-lift flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700">${lockIcon}</span><span class="min-w-0"><span class="block text-sm font-semibold text-slate-900">Admin</span><span class="mt-0.5 block text-xs text-slate-500">Login to manage records and review submissions.</span></span></button>
+      <button type="button" onclick="go('status')" class="w-full pt-1 text-center text-xs font-medium text-pine-700 hover:underline">Already submitted? Check your request status</button>
     </div>`}
   </div>
 </div>`;
@@ -829,7 +830,7 @@ function publicShell(body,title='Resident Survey Form',subtitle='Fill out your d
   return `<div class="relative min-h-screen bg-cream text-slate-900">
   <header class="border-b border-slate-200 bg-white"><div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
     <div class="flex min-w-0 items-center gap-2.5"><span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span><span class="min-w-0"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span></span></div>
-    <button type="button" onclick="go('login')" class="${btnGhost}">Back</button>
+    <div class="flex items-center gap-2"><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button><button type="button" onclick="go('login')" class="${btnGhost}">Back</button></div>
   </div></header>
   <main class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:py-10"><div class="${animateNext?'animate-fade-up':''}">
     <div class="mb-6"><h1 class="text-2xl font-semibold tracking-tight text-slate-900">${title}</h1><p class="mt-1 text-sm text-slate-500">${subtitle}</p></div>
@@ -840,12 +841,14 @@ function publicShell(body,title='Resident Survey Form',subtitle='Fill out your d
 function submitPublic(rec){
   delete rec.id;
   reloadSubs();
-  submissions.unshift({sid:newUid(),submittedAt:new Date().toISOString(),status:'pending',data:rec});
+  lastRef=uniqueRef();
+  submissions.unshift({sid:newUid(),ref:lastRef,submittedAt:new Date().toISOString(),status:'pending',data:rec});
   persistSubs();
+  rememberRef(lastRef);
   go('thanks');
 }
 function thanks(){
-  return publicShell(`<div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center sm:p-9"><div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">${checkIcon}</div><h2 class="mt-4 text-lg font-semibold text-slate-900">Thank you! Your survey was submitted.</h2><p class="mt-2 text-sm leading-6 text-slate-500">The barangay admin will review your response. Once accepted, you will be added to the resident records.</p><div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" class="${btnGhost}" onclick="go('public')">Submit another response</button><button type="button" class="${btnPrimary}" onclick="go('login')">Back to start</button></div></div>`,'Submitted','Your response has been sent to the barangay admin.');
+  return publicShell(`<div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center sm:p-9"><div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">${checkIcon}</div><h2 class="mt-4 text-lg font-semibold text-slate-900">Thank you! Your survey was submitted.</h2><p class="mt-2 text-sm leading-6 text-slate-500">The barangay admin will review your response. Once accepted, you will be added to the resident records.</p><div class="mt-5 rounded-xl bg-pine-50 px-4 py-3"><p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-pine-600">Your reference code</p><p class="mt-1 font-mono text-xl font-semibold tracking-wider text-pine-800">${esc(lastRef)}</p><p class="mt-1 text-xs text-slate-500">Save this code. Use it to check if your request was accepted or declined.</p></div><div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" class="${btnPrimary}" onclick="viewRef(lastRef)">Check status</button><button type="button" class="${btnGhost}" onclick="go('public')">Submit another response</button><button type="button" class="${btnGhost}" onclick="go('login')">Back to start</button></div></div>`,'Submitted','Your response has been sent to the barangay admin.');
 }
 
 function setSubTab(t){subTab=t;draw()}
@@ -858,8 +861,8 @@ function subs(){
   const tabBtns=tabs.map(([k,l])=>`<button type="button" onclick="setSubTab('${k}')" ${subTab===k?'aria-current="page"':''} class="${btn} ${subTab===k?'bg-pine-700 text-white hover:bg-pine-800':'border border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}">${l}<span class="rounded-full px-1.5 text-[11px] ${subTab===k?'bg-white/20':'bg-slate-100'}">${count(k)}</span></button>`).join('');
   const dateHead=subTab==='pending'?'Submitted':subTab==='accepted'?'Accepted on':'Declined on';
   const empty={pending:'No pending submissions.',accepted:'No accepted submissions yet.',declined:'No declined submissions.'}[subTab];
-  const rows=list.length?list.map(({x,i})=>{const d=x.data;return `<tr onclick="openSub(${i})" class="cursor-pointer transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">${esc(d.name)}</td><td class="px-3 py-3.5 text-slate-600">${esc(ageOf(d))}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-600">${esc(d.purok||'')}</td><td class="px-3 py-3.5 text-slate-600">${esc(d.job||'')}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-500">${fmtDT(subTab==='pending'?x.submittedAt:x.reviewedAt)}</td><td class="px-5 py-3.5 text-right"><button type="button" class="${btnGhost} px-3 py-1.5" onclick="event.stopPropagation();openSub(${i})">${subTab==='pending'?'Review':'View'}</button></td></tr>`}).join(''):`<tr><td colspan="6" class="px-5 py-10 text-center text-sm text-slate-500">${empty}</td></tr>`;
-  return shell('Submissions','Survey responses sent by residents. Accept to add them to the records, or decline.',`<div class="mb-3 flex flex-wrap gap-2">${tabBtns}</div><div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[720px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Purok</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">${dateHead}</th><th class="px-5 py-3"></th></tr></thead><tbody class="divide-y divide-slate-100">${rows}</tbody></table></div></div>`);
+  const rows=list.length?list.map(({x,i})=>{const d=x.data;return `<tr onclick="openSub(${i})" class="cursor-pointer transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-mono text-xs text-slate-500">${esc(x.ref||'')}</td><td class="whitespace-nowrap px-3 py-3.5 font-medium text-slate-900">${esc(d.name)}</td><td class="px-3 py-3.5 text-slate-600">${esc(ageOf(d))}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-600">${esc(d.purok||'')}</td><td class="px-3 py-3.5 text-slate-600">${esc(d.job||'')}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-500">${fmtDT(subTab==='pending'?x.submittedAt:x.reviewedAt)}</td><td class="px-5 py-3.5 text-right"><button type="button" class="${btnGhost} px-3 py-1.5" onclick="event.stopPropagation();openSub(${i})">${subTab==='pending'?'Review':'View'}</button></td></tr>`}).join(''):`<tr><td colspan="7" class="px-5 py-10 text-center text-sm text-slate-500">${empty}</td></tr>`;
+  return shell('Submissions','Survey responses sent by residents. Accept to add them to the records, or decline.',`<div class="mb-3 flex flex-wrap gap-2">${tabBtns}</div><div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[820px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">Ref</th><th class="px-3 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Purok</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">${dateHead}</th><th class="px-5 py-3"></th></tr></thead><tbody class="divide-y divide-slate-100">${rows}</tbody></table></div></div>`);
 }
 function subModal(){
   const x=submissions[subIndex];
@@ -903,5 +906,47 @@ function confirmDecline(){
 window.addEventListener('storage',e=>{
   if(e.key===SUBS_KEY){reloadSubs();if(v==='submissions'&&subIndex<0&&declineIndex<0||v==='dashboard')draw()}
 });
+
+let lastRef='',statusRef='',statusErr='';
+const REF_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const MYREFS_KEY='barangay-my-refs-v1';
+function uniqueRef(){
+  let r;
+  do{r='SUB-'+Array.from({length:6},()=>REF_CHARS[Math.floor(Math.random()*REF_CHARS.length)]).join('')}while(submissions.some(x=>x.ref===r));
+  return r;
+}
+function ensureRefs(){
+  let ch=false;
+  submissions.forEach(x=>{if(!x.ref){x.ref=uniqueRef();ch=true}});
+  if(ch)persistSubs();
+}
+const myRefs=()=>{try{const a=JSON.parse(localStorage.getItem(MYREFS_KEY));return Array.isArray(a)?a:[]}catch{return []}};
+function rememberRef(ref){try{localStorage.setItem(MYREFS_KEY,JSON.stringify([ref,...myRefs().filter(x=>x!==ref)].slice(0,10)))}catch{}}
+const normRef=str=>{let c=String(str||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.startsWith('SUB'))c=c.slice(3);return c?'SUB-'+c:''};
+function viewRef(ref){statusRef=ref;statusErr='';go('status')}
+function checkStatus(){
+  const el=document.getElementById('ref');
+  statusRef=normRef(el?el.value:'');
+  statusErr=statusRef?'':'Enter your reference code.';
+  draw();
+}
+function statusCard(x){
+  const t={
+    pending:['bg-amber-50 text-amber-800','border-amber-200','Under review','The barangay admin has not reviewed your survey yet. Please check again later.'],
+    accepted:['bg-emerald-50 text-emerald-800','border-emerald-200','Accepted','Your information has been added to the barangay resident records.'],
+    declined:['bg-red-50 text-red-800','border-red-200','Declined','Your survey was not accepted.']
+  }[x.status]||['bg-slate-50 text-slate-700','border-slate-200',x.status,''];
+  const when=x.status==='pending'?`Submitted ${fmtDT(x.submittedAt)}`:`${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}`;
+  return `<div class="rounded-2xl border ${t[1]} bg-white p-5"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-900">${esc(x.data.name)}</p><p class="mt-0.5 font-mono text-xs text-slate-500">${esc(x.ref)}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${t[0]}">${t[2]}</span></div><p class="mt-3 text-sm text-slate-600">${t[3]}</p>${x.status==='declined'?`<p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"><span class="font-medium">Reason:</span> ${x.reason?esc(x.reason):'No reason was given.'}</p><button type="button" class="${btnPrimary} mt-4" onclick="go('public')">Submit a new survey</button>`:''}<p class="mt-3 text-xs text-slate-400">${when}</p></div>`;
+}
+function statusView(){
+  reloadSubs();
+  const found=statusRef?submissions.find(x=>x.ref===statusRef):null;
+  const mine=myRefs().map(r=>submissions.find(x=>x.ref===r)).filter(Boolean);
+  const result=statusRef&&!statusErr?(found?statusCard(found):`<p role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">No request found for <span class="font-mono">${esc(statusRef)}</span>. Check the code and try again.</p>`):'';
+  const list=mine.length?`<div class="rounded-2xl border border-slate-200 bg-white p-5"><h2 class="text-sm font-semibold text-slate-900">Your requests on this device</h2><ul class="mt-2 divide-y divide-slate-100">${mine.map(x=>`<li><button type="button" onclick="viewRef('${esc(x.ref)}')" class="flex w-full items-center justify-between gap-3 py-2.5 text-left"><span class="min-w-0"><span class="block truncate text-sm font-medium text-slate-900">${esc(x.data.name)}</span><span class="block font-mono text-xs text-slate-500">${esc(x.ref)}</span></span><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${x.status==='accepted'?'bg-emerald-50 text-emerald-700':x.status==='declined'?'bg-red-50 text-red-700':'bg-amber-50 text-amber-700'}">${x.status==='accepted'?'Accepted':x.status==='declined'?'Declined':'Under review'}</span></button></li>`).join('')}</ul></div>`:'';
+  return publicShell(`<div class="mx-auto max-w-md space-y-4"><form class="rounded-2xl border border-slate-200 bg-white p-5" onsubmit="event.preventDefault();checkStatus()"><label class="${labelCls}" for="ref">Reference code</label><input id="ref" class="${field} font-mono uppercase" placeholder="SUB-XXXXXX" value="${esc(statusRef)}" autocapitalize="characters" autocomplete="off">${statusErr?`<p role="alert" class="mt-2 text-xs font-medium text-red-600">${statusErr}</p>`:''}<button type="submit" class="${btnPrimary} mt-4 w-full">Check status</button></form>${result}${list}</div>`,'Check Request Status','Enter the reference code you received after submitting your survey.');
+}
+ensureRefs();
 
 draw();
