@@ -492,21 +492,22 @@ function home(){
 function login(){
   return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
-  <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
+  <header class="absolute inset-x-0 top-0 z-30 border-b border-white/10 bg-[#06130e]/90 backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-      <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700">
+      <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
         <span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span>
-        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-pine-800">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-pine-600">Tangub City</span></span>
+        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-white">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-emerald-400">Tangub City</span></span>
       </button>
       <nav class="hidden items-center gap-4 sm:flex sm:gap-7" aria-label="Main navigation">
-        <button type="button" onclick="go('home')" class="border-b-2 border-emerald-500 pb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button>
-        <button type="button" onclick="go('public')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Resident Survey</button>
+        <button type="button" onclick="go('home')" class="${hNav} border-b-2 border-emerald-400 pb-0.5 text-white">Home</button>
+        <button type="button" onclick="go('public')" class="${hNav}">Resident Survey</button>
+        <button type="button" onclick="go('login')" class="rounded-lg bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#06130e] shadow-[0_0_24px_-6px_rgba(52,211,153,.9)] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Log in</button>
       </nav>
-      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-pine-800 hover:bg-pine-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700 sm:hidden')}
+      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:hidden')}
     </div>
-    <div id="mnav" class="hidden border-t border-slate-200 bg-white sm:hidden">
-      <button type="button" onclick="go('home')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Home</button>
-      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Resident Survey</button>
+    <div id="mnav" class="hidden border-t border-white/10 sm:hidden">
+      <button type="button" onclick="go('home')" class="block w-full border-b border-white/10 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Home</button>
+      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Resident Survey</button>
     </div>
   </header>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
