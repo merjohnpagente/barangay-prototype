@@ -435,8 +435,8 @@ function home(){
     <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(251,146,60,.28),transparent_60%)]"></div>
       <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-orange-500/10 blur-[120px] animate-drift"></div>
-      <img src="assets/barangay-logo.jpg" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 rounded-full object-cover opacity-30 shadow-2xl sm:right-[4%] sm:h-[34rem] sm:w-[34rem] sm:opacity-100">
-      <div class="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent sm:w-[55%] sm:via-white/60"></div>
+      <img src="assets/barangay-logo.jpg" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 rounded-full object-cover opacity-30 shadow-2xl aspect-square sm:right-[5%] sm:h-[min(46rem,calc(100vh_-_7rem))] sm:w-auto sm:opacity-100">
+      <div class="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent sm:w-[45%] sm:via-white/50"></div>
       <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent sm:h-0"></div>
     </div>
     <div class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
