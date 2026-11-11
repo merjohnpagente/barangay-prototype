@@ -403,8 +403,8 @@ function toggleMenu(){
   setTimeout(()=>{panel.classList.add('hidden');panel.classList.remove('is-closing')},200);
 }
 
-const menuBtn=(cls)=>`<button id="mbtn" type="button" onclick="toggleMenu()" aria-label="Menu" aria-expanded="false" aria-controls="mnav" class="${cls}"><svg class="ic-open h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="ic-close hidden h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
-function toggleMenu(){const m=document.getElementById('mnav'),b=document.getElementById('mbtn');if(!m||!b)return;const open=m.classList.toggle('hidden')===false;b.setAttribute('aria-expanded',open);b.querySelector('.ic-open').classList.toggle('hidden',open);b.querySelector('.ic-close').classList.toggle('hidden',!open)}
+const menuBtn=(cls)=>`<button id="mbtn" type="button" onclick="togglePubMenu()" aria-label="Menu" aria-expanded="false" aria-controls="mnav" class="${cls}"><svg class="ic-open h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="ic-close hidden h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+function togglePubMenu(){const m=document.getElementById('mnav'),b=document.getElementById('mbtn');if(!m||!b)return;const open=m.classList.toggle('hidden')===false;b.setAttribute('aria-expanded',open);b.querySelector('.ic-open').classList.toggle('hidden',open);b.querySelector('.ic-close').classList.toggle('hidden',!open)}
 const hNav='text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600 transition-colors hover:text-orange-600';
 const hFeatures=[[usersIcon,'Resident survey','Fill out your personal, family, housing and contact details online. No login needed.'],[checkIcon,'Request tracking','Use your reference code to see if your submission was accepted or declined.'],[heartIcon,'Complete profile','Personal, physical, family, housing and sectoral information in one form.'],[lockIcon,'Admin review','Barangay staff review every submission before it is added to the resident records.']];
 const hSteps=[['01','Fill out the survey','Answer the resident survey form. It only takes a few minutes.'],['02','Save your reference code','You get a code after submitting. Keep it so you can check later.'],['03','Check your status','See if the barangay admin accepted or declined your submission.']];
@@ -425,7 +425,7 @@ function home(){
       ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-slate-900 hover:bg-orange-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 sm:hidden')}
     </div>
     <div id="mnav" class="hidden border-t border-slate-200 sm:hidden">
-      <button type="button" onclick="toggleMenu();window.scrollTo({top:0,behavior:'smooth'})" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Home</button>
+      <button type="button" onclick="togglePubMenu();window.scrollTo({top:0,behavior:'smooth'})" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Home</button>
       <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Resident Survey</button>
     </div>
   </header>
