@@ -487,8 +487,8 @@ function login(){
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
   <header class="absolute inset-x-0 top-0 z-20">
     <nav class="mx-auto flex max-w-6xl items-center justify-end gap-5 px-4 py-4 sm:gap-7 sm:px-6" aria-label="Main navigation">
-      <button type="button" onclick="go('home')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 transition-colors hover:text-pine-800">Home</button>
-      <button type="button" onclick="go('public')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 transition-colors hover:text-pine-800">Resident Survey</button>
+      <button type="button" onclick="go('home')" class="border-b-2 border-emerald-500 pb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button>
+      <button type="button" onclick="go('public')" class="rounded-lg bg-pine-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-pine-800">Resident Survey</button>
     </nav>
   </header>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
