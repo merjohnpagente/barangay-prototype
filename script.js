@@ -417,8 +417,7 @@ function home(){
       </button>
       <nav class="flex items-center gap-4 sm:gap-7" aria-label="Main navigation">
         <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="${hNav} hidden border-b-2 border-emerald-400 pb-0.5 text-white sm:inline">Home</button>
-        <a href="#features" class="${hNav} hidden sm:inline">Features</a>
-        <a href="#how" class="${hNav} hidden sm:inline">How it works</a>
+        <button type="button" onclick="go('public')" class="${hNav} hidden sm:inline">Resident Survey</button>
         <button type="button" onclick="go('login')" class="rounded-lg bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#06130e] shadow-[0_0_24px_-6px_rgba(52,211,153,.9)] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Log in</button>
       </nav>
     </div>
