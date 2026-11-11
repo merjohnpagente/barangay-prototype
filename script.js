@@ -971,7 +971,7 @@ function subModal(){
   if(!x)return '';
   const footer=x.status==='pending'
     ?`<div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDecline(${subIndex})">Decline</button><button type="button" class="${btnPrimary}" onclick="acceptSub(${subIndex})">Accept</button></div>`
-    :`<div class="mt-6 rounded-lg px-3 py-2.5 text-xs ${x.status==='accepted'?'bg-emerald-50 text-emerald-700':'bg-red-50 text-red-700'}">${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}${x.reason?` · Reason: ${esc(x.reason)}`:''}</div>`;
+    :`<div class="mt-6 rounded-lg px-3 py-2.5 text-xs ${x.status==='accepted'?'bg-emerald-50 text-emerald-700':'bg-red-50 text-red-700'}">${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}${x.reason?` · Comment: ${esc(x.reason)}`:''}</div>`;
   return residentModal(x.data,footer,'closeSub()');
 }
 function acceptSub(i){
@@ -993,15 +993,22 @@ function declineModal(){
     <div class="grid h-11 w-11 place-items-center rounded-full bg-red-50 text-red-600">${closeIcon}</div>
     <h2 class="mt-4 text-base font-semibold text-slate-900">Decline this submission?</h2>
     <p class="mt-1 text-sm text-slate-600"><span class="font-medium text-slate-900">${esc(x.data.name)}</span> will not be added to the records.</p>
-    <label class="${labelCls} mt-4" for="decline-reason">Reason (optional)</label><textarea id="decline-reason" class="${field} min-h-[4.5rem] resize-y" placeholder="e.g. Incomplete or incorrect information"></textarea>
+    <label class="${labelCls} mt-4" for="decline-reason">Comment <span class="text-red-600">*</span> <span class="font-normal text-slate-400">(required, the resident will see this)</span></label><textarea id="decline-reason" class="${field} min-h-[4.5rem] resize-y" placeholder="e.g. Incomplete or incorrect information" required oninput="declineErr(false)"></textarea><p id="decline-err" role="alert" class="mt-1.5 hidden text-xs font-medium text-red-600">Please write a comment before declining.</p>
     <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btnGhost}" onclick="closeDecline()">Cancel</button><button type="button" class="${btn} bg-red-600 text-white hover:bg-red-700" onclick="confirmDecline()">Decline</button></div>
   </div></div>`;
+}
+function declineErr(show){
+  const e=document.getElementById('decline-err'),t=document.getElementById('decline-reason');
+  if(e)e.classList.toggle('hidden',!show);
+  if(t){t.classList.toggle('!border-red-400',!!show);if(show)t.focus()}
 }
 function confirmDecline(){
   const x=submissions[declineIndex];
   if(!x||x.status!=='pending')return;
+  const reason=((document.getElementById('decline-reason')||{}).value||'').trim();
+  if(!reason){declineErr(true);return}
   x.status='declined';x.reviewedAt=new Date().toISOString();
-  x.reason=((document.getElementById('decline-reason')||{}).value||'').trim();
+  x.reason=reason;
   persistSubs();
   subIndex=-1;declineIndex=-1;draw();flash('Submission declined');
 }
@@ -1039,7 +1046,7 @@ function statusCard(x){
     declined:['bg-red-50 text-red-800','border-red-200','Declined','Your survey was not accepted.']
   }[x.status]||['bg-slate-50 text-slate-700','border-slate-200',x.status,''];
   const when=x.status==='pending'?`Submitted ${fmtDT(x.submittedAt)}`:`${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}`;
-  return `<div class="rounded-2xl border ${t[1]} bg-white p-5"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-900">${esc(x.data.name)}</p><p class="mt-0.5 font-mono text-xs text-slate-500">${esc(x.ref)}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${t[0]}">${t[2]}</span></div><p class="mt-3 text-sm text-slate-600">${t[3]}</p>${x.status==='declined'?`<p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"><span class="font-medium">Reason:</span> ${x.reason?esc(x.reason):'No reason was given.'}</p><button type="button" class="${btnPrimary} mt-4" onclick="go('public')">Submit a new survey</button>`:''}<p class="mt-3 text-xs text-slate-400">${when}</p></div>`;
+  return `<div class="rounded-2xl border ${t[1]} bg-white p-5"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-900">${esc(x.data.name)}</p><p class="mt-0.5 font-mono text-xs text-slate-500">${esc(x.ref)}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${t[0]}">${t[2]}</span></div><p class="mt-3 text-sm text-slate-600">${t[3]}</p>${x.status==='declined'?`<p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"><span class="font-medium">Admin's comment:</span> ${x.reason?esc(x.reason):'No comment was given.'}</p><button type="button" class="${btnPrimary} mt-4" onclick="go('public')">Submit a new survey</button>`:''}<p class="mt-3 text-xs text-slate-400">${when}</p></div>`;
 }
 function statusView(){
   reloadSubs();
