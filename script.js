@@ -52,7 +52,7 @@ const VIEWS=['dashboard','records','survey','submissions'];
 const isPub=()=>v==='public'||v==='thanks'||v==='status';
 const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return s==='assistance'?'records':s==='reports'?'dashboard':VIEWS.includes(s)?s:null}catch(e){return null}})();
 let animateNext=true;
-let v=savedView||'home',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='',loginRole='',subTab='pending',subIndex=-1,declineIndex=-1;
+let v=savedView||'home',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='',loginRole='',subTab='pending',subIndex=-1,declineIndex=-1,resubRef='';
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
 const newUid=()=>'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -296,7 +296,7 @@ function renderModal(){
 }
 function go(k){
   v=k;animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;deleteIndex=-1;editIndex=-1;
-  loginRole='';subIndex=-1;declineIndex=-1;if(k==='dashboard'||k==='submissions')reloadSubs();
+  loginRole='';resubRef='';subIndex=-1;declineIndex=-1;if(k==='dashboard'||k==='submissions')reloadSubs();
   try{VIEWS.includes(k)?localStorage.setItem(AUTH_KEY,k):localStorage.removeItem(AUTH_KEY)}catch(e){}
   draw();
   if(k==='login')setTimeout(()=>{const u=document.getElementById('u');if(u)u.focus()},60)
@@ -668,7 +668,9 @@ function residentModal(ro,footer,cf='closeResident()'){
 
 function survey(){
   const editing=editIndex>=0;
-  const r=editing?residents[editIndex]:{};
+  const resub=isPub()&&resubRef?submissions.find(x=>x.ref===resubRef&&x.status==='declined'):null;
+  const prefill=editing||!!resub;
+  const r=editing?residents[editIndex]:resub?resub.data:{};
   const nm=splitName(r.name),sp=splitName(spouseName(r)),spLinked=!!byUid(r.spouseUid);
   const so=(a,selected='')=>`<select class="${field}"><option value="">Select</option>${a.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}</select>`;
   const formHtml=`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" novalidate onsubmit="event.preventDefault();saveSurvey()">
@@ -678,22 +680,22 @@ function survey(){
       <p id="form-error" class="hidden text-xs font-medium text-red-600 sm:col-span-6 sm:-mt-3" role="alert"></p>
       <div class="sm:col-span-2"><label class="${labelCls}" for="name-ext">Name extension</label>${so(nameExts,r.nameExt).replace('<select','<select id="name-ext"')}</div>
       <div class="sm:col-span-4"><label class="${labelCls}" for="birth-place">Place of birth</label><input id="birth-place" class="${field}" placeholder="City / municipality, province" value="${esc(r.birthPlace||'')}" oninput="capName(this)" autocapitalize="words" autocomplete="off"></div>
-      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(editing?ageOf(r):'')}" oninput="syncBirthYear()" onchange="syncBirthYear()"></div>
+      <div class="sm:col-span-1"><label class="${labelCls}" for="age">Age</label><input id="age" type="number" min="0" max="120" class="${field}" placeholder="00" value="${esc(prefill?ageOf(r):'')}" oninput="syncBirthYear()" onchange="syncBirthYear()"></div>
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" required onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
-      <div id="civil-wrap" class="sm:col-span-2 ${editing&&ageOf(r)!==''&&Number(ageOf(r))<18?'hidden':''}"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
+      <div id="civil-wrap" class="sm:col-span-2 ${prefill&&ageOf(r)!==''&&Number(ageOf(r))<18?'hidden':''}"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
       <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><select id="spouse-link" class="${field} mb-3 ${isPub()?'hidden':''}" aria-label="Link spouse already in the system" onchange="linkSpouseSel(this)"><option value="">Not in system — type name below</option>${residentOptions(spLinked?r.spouseUid:'',r.uid||'')}</select><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}" ${spLinked?'readonly':''} oninput="capName(this,${k==='middle'})" autocapitalize="words">`).join('')}</div></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work-select">Work / occupation</label>${(()=>{const cur=String(r.job||'').trim();const match=jobOptions.find(j=>j.toLowerCase()===cur.toLowerCase());const sel=match||(cur?'Other':'');return `<select id="work-select" class="${field}" onchange="syncWork()"><option value="">Select</option>${jobOptions.map(j=>`<option ${j===sel?'selected':''}>${j}</option>`).join('')}<option ${sel==='Other'?'selected':''}>Other</option></select><input id="work-other" class="${field} mt-2 ${sel==='Other'?'':'hidden'}" placeholder="Type the occupation" aria-label="Other occupation" value="${esc(sel==='Other'?cur:'')}" oninput="capName(this);syncWork()" autocapitalize="words">`})()}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
     <section class="border-t border-slate-100 pt-8"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Children</h2></div><button type="button" class="${btnGhost}" onclick="addChildRow()">Add child</button></div><div id="children-list" class="mt-5 space-y-3">${(Array.isArray(r.children)?r.children:[]).map(childRow).join('')}</div></section>
-    ${extraSections(r,so,editing)}
+    ${extraSections(r,so,prefill)}
     <section class="border-t border-slate-100 pt-8"><h2 class="text-sm font-semibold text-slate-900">Other information</h2><p class="mt-0.5 text-xs text-slate-500">Contact, employment, voter and program details, plus notes.</p><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       <div class="sm:col-span-3"><span class="${labelCls}">PWD status</span><div class="flex gap-6 pt-2"><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="Yes" class="h-4 w-4 accent-pine-700" onchange="syncPwd()" ${r.pwd==='Yes'?'checked':''}>Yes</label><label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="pwd" value="No" class="h-4 w-4 accent-pine-700" onchange="syncPwd()" ${r.pwd==='No'?'checked':''}>No</label></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="contact">Contact number</label><input id="contact" type="tel" inputmode="tel" class="${field}" placeholder="0912 345 6789" maxlength="16" oninput="fmtPhone(this,event)" title="Philippine mobile number: 09XX XXX XXXX or +63 9XX XXX XXXX" value="${esc(phoneFmt(r.contact))}"></div>
       <div id="pwd-extra" class="grid grid-cols-1 gap-x-4 gap-y-5 sm:col-span-6 sm:grid-cols-6 ${r.pwd==='Yes'?'':'hidden'}"><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-type">Type of PWD</label>${so(pwdTypes,r.pwdType).replace('<select','<select id="pwd-type"'+(r.pwd==='Yes'?' required':''))}</div><div class="sm:col-span-3"><label class="${labelCls}" for="pwd-id">PWD ID number</label><input id="pwd-id" class="${field}" placeholder="e.g. 10-4208-000-0000000" autocomplete="off" value="${esc(r.pwdId||'')}"></div></div>
       <div class="sm:col-span-3"><label class="${labelCls}" for="employment">Employment status</label>${so(['Employed','Self-employed','Unemployed','Student','Retired'],r.employment).replace('<select','<select id="employment"')}</div>
-      <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${(()=>{const ra=editing?ageOf(r):'';const minorInit=ra!==''&&Number(ra)<18;const html=yn('voter',minorInit?'No':r.voter);return (minorInit?html.replace('value="Yes"','value="Yes" disabled'):html)+`<p id="voter-hint" class="mt-1 text-[11px] text-slate-400 ${minorInit?'':'hidden'}">Under 18 cannot be a registered voter.</p>`})()}</div>
+      <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${(()=>{const ra=prefill?ageOf(r):'';const minorInit=ra!==''&&Number(ra)<18;const html=yn('voter',minorInit?'No':r.voter);return (minorInit?html.replace('value="Yes"','value="Yes" disabled'):html)+`<p id="voter-hint" class="mt-1 text-[11px] text-slate-400 ${minorInit?'':'hidden'}">Under 18 cannot be a registered voter.</p>`})()}</div>
       <div id="voter-extra" class="sm:col-span-3 ${r.voter==='Yes'?'':'hidden'}"><label class="${labelCls}" for="voter-year">Last year voted</label><input id="voter-year" type="number" min="1987" max="${nowYear}" class="${field}" placeholder="e.g. ${nowYear-1}" value="${esc(r.voterYear||'')}"></div>
       <div class="sm:col-span-3"><span class="${labelCls}">4Ps beneficiary</span>${yn('fourps',r.fourPs)}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">Scholar</span>${yn('scholar',scholarOf(r))}</div>
@@ -709,9 +711,10 @@ function survey(){
     </div></section>
   </div>
   <div id="form-summary" class="hidden border-t border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700 sm:px-7" role="alert"></div>
-  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil();syncWorkVisibility()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':isPub()?'Submit survey':'Save resident'}</button></div>
+  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil();syncWorkVisibility()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':resub?'Resubmit survey':isPub()?'Submit survey':'Save resident'}</button></div>
 </form>`;
-  return isPub()?publicShell(formHtml):shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile.':'Add a resident to the survey record.',formHtml);
+  const banner=resub?`<div class="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4" role="alert"><p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-700">Admin's comment</p><p class="mt-1.5 whitespace-pre-line text-sm leading-6 text-red-800">${esc(resub.reason||'No comment was given.')}</p><p class="mt-3 text-xs text-red-600">Reference <span class="font-mono">${esc(resub.ref)}</span> · Fix the details below, then resubmit for review.</p></div>`:'';
+  return isPub()?publicShell(banner+formHtml,resub?'Edit your survey':'Resident Survey Form',resub?'Your survey was declined. Update your details and resubmit it.':'Fill out your details below. The barangay admin will review your response.'):shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile.':'Add a resident to the survey record.',formHtml);
 }
 
 function saveSurvey(){
@@ -943,6 +946,17 @@ function publicShell(body,title='Resident Survey Form',subtitle='Fill out your d
 function submitPublic(rec){
   delete rec.id;
   reloadSubs();
+  const old=resubRef?submissions.find(x=>x.ref===resubRef&&x.status==='declined'):null;
+  if(old){
+    const now=new Date().toISOString();
+    old.prevReason=old.reason||'No comment was given.';
+    old.data=rec;old.status='pending';old.submittedAt=now;old.resubmittedAt=now;old.reason='';delete old.reviewedAt;
+    persistSubs();
+    lastRef=old.ref;resubRef='';
+    rememberRef(lastRef);
+    go('thanks');
+    return;
+  }
   lastRef=uniqueRef();
   submissions.unshift({sid:newUid(),ref:lastRef,submittedAt:new Date().toISOString(),status:'pending',data:rec});
   persistSubs();
@@ -970,7 +984,7 @@ function subModal(){
   const x=submissions[subIndex];
   if(!x)return '';
   const footer=x.status==='pending'
-    ?`<div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDecline(${subIndex})">Decline</button><button type="button" class="${btnPrimary}" onclick="acceptSub(${subIndex})">Accept</button></div>`
+    ?`${x.prevReason?`<div class="mt-6 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-800">Resubmitted after being declined · Previous comment: ${esc(x.prevReason)}</div>`:''}<div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDecline(${subIndex})">Decline</button><button type="button" class="${btnPrimary}" onclick="acceptSub(${subIndex})">Accept</button></div>`
     :`<div class="mt-6 rounded-lg px-3 py-2.5 text-xs ${x.status==='accepted'?'bg-emerald-50 text-emerald-700':'bg-red-50 text-red-700'}">${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}${x.reason?` · Comment: ${esc(x.reason)}`:''}</div>`;
   return residentModal(x.data,footer,'closeSub()');
 }
@@ -1032,6 +1046,12 @@ function ensureRefs(){
 const myRefs=()=>{try{const a=JSON.parse(localStorage.getItem(MYREFS_KEY));return Array.isArray(a)?a:[]}catch{return []}};
 function rememberRef(ref){try{localStorage.setItem(MYREFS_KEY,JSON.stringify([ref,...myRefs().filter(x=>x!==ref)].slice(0,10)))}catch{}}
 const normRef=str=>{let c=String(str||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.startsWith('SUB'))c=c.slice(3);return c?'SUB-'+c:''};
+function editSubmission(ref){
+  const x=submissions.find(s=>s.ref===ref);
+  if(!x||x.status!=='declined')return;
+  v='public';resubRef=ref;animateNext=true;
+  draw();window.scrollTo({top:0});
+}
 function viewRef(ref){statusRef=ref;statusErr='';go('status')}
 function checkStatus(){
   const el=document.getElementById('ref');
@@ -1046,7 +1066,7 @@ function statusCard(x){
     declined:['bg-red-50 text-red-800','border-red-200','Declined','Your survey was not accepted.']
   }[x.status]||['bg-slate-50 text-slate-700','border-slate-200',x.status,''];
   const when=x.status==='pending'?`Submitted ${fmtDT(x.submittedAt)}`:`${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}`;
-  return `<div class="rounded-2xl border ${t[1]} bg-white p-5"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-900">${esc(x.data.name)}</p><p class="mt-0.5 font-mono text-xs text-slate-500">${esc(x.ref)}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${t[0]}">${t[2]}</span></div><p class="mt-3 text-sm text-slate-600">${t[3]}</p>${x.status==='declined'?`<p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"><span class="font-medium">Admin's comment:</span> ${x.reason?esc(x.reason):'No comment was given.'}</p><button type="button" class="${btnPrimary} mt-4" onclick="go('public')">Submit a new survey</button>`:''}<p class="mt-3 text-xs text-slate-400">${when}</p></div>`;
+  return `<div class="rounded-2xl border ${t[1]} bg-white p-5"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-900">${esc(x.data.name)}</p><p class="mt-0.5 font-mono text-xs text-slate-500">${esc(x.ref)}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${t[0]}">${t[2]}</span></div><p class="mt-3 text-sm text-slate-600">${t[3]}</p>${x.status==='declined'?`<p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"><span class="font-medium">Admin's comment:</span> ${x.reason?esc(x.reason):'No comment was given.'}</p><div class="mt-4 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="editSubmission('${esc(x.ref)}')">Edit and resubmit</button><button type="button" class="${btnGhost}" onclick="go('public')">Submit a new survey</button></div>`:''}<p class="mt-3 text-xs text-slate-400">${when}</p></div>`;
 }
 function statusView(){
   reloadSubs();
