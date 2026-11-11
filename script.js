@@ -52,7 +52,7 @@ const VIEWS=['dashboard','records','survey','submissions'];
 const isPub=()=>v==='public'||v==='thanks'||v==='status';
 const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return s==='assistance'?'records':s==='reports'?'dashboard':VIEWS.includes(s)?s:null}catch(e){return null}})();
 let animateNext=true;
-let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='',loginRole='',subTab='pending',subIndex=-1,declineIndex=-1;
+let v=savedView||'home',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='',loginRole='',subTab='pending',subIndex=-1,declineIndex=-1;
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
 const newUid=()=>'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -250,7 +250,7 @@ function shell(title,subtitle,body,actions=''){
 }
 
 function draw(){
-  const views={login,dashboard,survey,records:recs,submissions:subs,public:survey,thanks,status:statusView};
+  const views={home,login,dashboard,survey,records:recs,submissions:subs,public:survey,thanks,status:statusView};
   document.getElementById('app').innerHTML=views[v]();
   animateNext=false;
   renderModal();
@@ -298,7 +298,8 @@ function go(k){
   v=k;animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;deleteIndex=-1;editIndex=-1;
   loginRole='';subIndex=-1;declineIndex=-1;if(k==='dashboard'||k==='submissions')reloadSubs();
   try{VIEWS.includes(k)?localStorage.setItem(AUTH_KEY,k):localStorage.removeItem(AUTH_KEY)}catch(e){}
-  draw()
+  draw();
+  if(k==='login')setTimeout(()=>{const u=document.getElementById('u');if(u)u.focus()},60)
 }
 function editResident(i){editIndex=i;v='survey';animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;draw()}
 function openResident(i){viewIndex=i;renderModal()}
@@ -364,7 +365,7 @@ function exportCsv(){
   flash('Export downloaded');
 }
 function logout(){
-  if(confirm('Are you sure you want to log out?')){loginError='';go('login')}
+  if(confirm('Are you sure you want to log out?')){loginError='';go('home')}
 }
 function attemptLogin(){
   const username=(document.getElementById('u')?.value||'').trim();
@@ -402,24 +403,98 @@ function toggleMenu(){
   setTimeout(()=>{panel.classList.add('hidden');panel.classList.remove('is-closing')},200);
 }
 
+const hNav='text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75 transition-colors hover:text-white';
+const hFeatures=[[usersIcon,'Resident survey','Fill out your personal, family, housing and contact details online. No login needed.'],[checkIcon,'Request tracking','Use your reference code to see if your submission was accepted or declined.'],[heartIcon,'Complete profile','Personal, physical, family, housing and sectoral information in one form.'],[lockIcon,'Admin review','Barangay staff review every submission before it is added to the resident records.']];
+const hSteps=[['01','Fill out the survey','Answer the resident survey form. It only takes a few minutes.'],['02','Save your reference code','You get a code after submitting. Keep it so you can check later.'],['03','Check your status','See if the barangay admin accepted or declined your submission.']];
+function home(){
+  const total=residents.length;
+  return `<div id="top" class="relative min-h-screen overflow-x-hidden bg-[#06130e] text-white">
+  <header class="sticky top-0 z-30 border-b border-white/10 bg-[#06130e]/90 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+        <span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span>
+        <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-white">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-emerald-400">Tangub City</span></span>
+      </button>
+      <nav class="flex items-center gap-4 sm:gap-7" aria-label="Main navigation">
+        <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="${hNav} hidden border-b-2 border-emerald-400 pb-0.5 text-white sm:inline">Home</button>
+        <a href="#features" class="${hNav} hidden sm:inline">Features</a>
+        <a href="#how" class="${hNav} hidden sm:inline">How it works</a>
+        <button type="button" onclick="go('login')" class="rounded-lg bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#06130e] shadow-[0_0_24px_-6px_rgba(52,211,153,.9)] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Log in</button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="relative isolate flex min-h-[calc(100vh-61px)] items-center overflow-hidden">
+    <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(31,90,76,.55),transparent_60%)]"></div>
+      <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-emerald-500/10 blur-[120px] animate-drift"></div>
+      <img src="assets/barangay-logo.jpg" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 rounded-full object-cover opacity-[.12] grayscale sm:right-[4%] sm:h-[34rem] sm:w-[34rem]">
+      <div class="absolute inset-0 bg-gradient-to-r from-[#06130e] via-[#06130e]/70 to-transparent"></div>
+      <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#06130e] to-transparent"></div>
+    </div>
+    <div class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+      <div class="max-w-2xl">
+        <span class="reveal inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>Web-based resident survey</span>
+        <h1 class="mt-5">
+          <span class="reveal block text-5xl font-extrabold italic leading-none tracking-tight sm:text-7xl" style="--d:80ms">Be Counted!</span>
+          <span class="reveal mt-2 block text-sm font-semibold italic text-white/90 sm:text-lg" style="--d:140ms">Help us keep Barangay Migcanaway's records updated</span>
+          <span class="reveal mt-2 block text-4xl font-extrabold italic leading-none tracking-tight text-emerald-400 sm:text-6xl" style="--d:200ms">Take the Survey</span>
+          <span class="reveal block text-7xl font-black italic leading-[.95] tracking-tight sm:text-9xl" style="--d:260ms">TODAY</span>
+        </h1>
+        <p class="reveal mt-6 max-w-xl text-sm leading-6 text-white/75 sm:text-base" style="--d:320ms">A resident survey system for Barangay Migcanaway, Tangub City. Submit your household details online, then track whether your submission was accepted, all in one place.</p>
+        <div class="reveal mt-7 flex flex-wrap items-center gap-3" style="--d:380ms">
+          <button type="button" onclick="go('public')" class="-skew-x-12 bg-white px-6 py-3.5 text-sm font-bold text-[#06130e] transition-colors hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"><span class="inline-block skew-x-12">&rarr; Take the Survey</span></button>
+          <button type="button" onclick="go('status')" class="rounded-lg border border-emerald-400/50 px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-300 transition-colors hover:bg-emerald-400/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">Check status</button>
+        </div>
+        <div class="reveal mt-7 inline-flex items-center gap-5 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur" style="--d:440ms">
+          <div class="text-center"><p class="text-2xl font-bold text-emerald-400">${total}</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/70">Residents</p></div>
+          <span class="h-8 w-px bg-white/15"></span>
+          <div class="text-center"><p class="text-2xl font-bold text-emerald-400">${puroks.length}</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/70">Puroks</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="scroll-mt-16 border-t border-white/10 bg-[#081a13] py-16 sm:py-20">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <p class="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-400">Features</p>
+      <h2 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Everything in one place</h2>
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        ${hFeatures.map(([ic,t,d])=>`<div class="rounded-2xl border border-white/10 bg-white/[.04] p-5 transition-colors hover:border-emerald-400/40"><span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-400/10 text-emerald-400">${ic}</span><h3 class="mt-4 text-sm font-semibold text-white">${t}</h3><p class="mt-1.5 text-sm leading-6 text-white/65">${d}</p></div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="scroll-mt-16 border-t border-white/10 py-16 sm:py-20">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <p class="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-400">How it works</p>
+      <h2 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Three simple steps</h2>
+      <div class="mt-8 grid gap-4 sm:grid-cols-3">
+        ${hSteps.map(([n,t,d])=>`<div class="rounded-2xl border border-white/10 bg-white/[.04] p-5"><p class="text-3xl font-extrabold italic text-emerald-400">${n}</p><h3 class="mt-3 text-sm font-semibold text-white">${t}</h3><p class="mt-1.5 text-sm leading-6 text-white/65">${d}</p></div>`).join('')}
+      </div>
+      <div class="mt-10 flex flex-wrap items-center gap-3">
+        <button type="button" onclick="go('public')" class="rounded-lg bg-emerald-400 px-5 py-3 text-sm font-bold text-[#06130e] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Take the Survey</button>
+        <button type="button" onclick="go('login')" class="rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">Admin log in</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-white/10 px-4 py-6 text-center text-xs text-white/50">&copy; ${new Date().getFullYear()} Barangay Migcanaway, Tangub City &middot; Resident Survey System</footer>
+</div>`;
+}
+
 function login(){
   return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
   <div class="relative z-10 w-full max-w-md ${animateNext?'animate-fade-up':''} rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
     <div class="text-center"><div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="Barangay Migcanaway seal" class="h-16 w-16 rounded-full object-cover ring-1 ring-slate-200 sm:h-20 sm:w-20"><img src="assets/tangub-logo.jpg" alt="Tangub City seal" class="h-16 w-16 object-contain sm:h-20 sm:w-20"></div><p class="mt-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
-    ${loginRole==='admin'?`<form class="mt-6 space-y-4" onsubmit="event.preventDefault();attemptLogin()">
-      <button type="button" onclick="backToRoles()" class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-pine-700">&larr; Back</button>
+    <form class="mt-6 space-y-4" onsubmit="event.preventDefault();attemptLogin()">
       <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username" required></div>
       <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password" required></div>
       ${loginError?`<p role="alert" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">${loginError}</p>`:''}
       <button type="submit" class="${btnPrimary} mt-2 w-full px-4 py-3">Login</button>
-    </form>`:`<div class="mt-6 space-y-3">
-      <p class="text-center text-xs font-medium text-slate-500">Continue as</p>
-      <button type="button" onclick="go('public')" class="hover-lift flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-pine-50 text-pine-700">${usersIcon}</span><span class="min-w-0"><span class="block text-sm font-semibold text-slate-900">Resident</span><span class="mt-0.5 block text-xs text-slate-500">No login needed. Fill out the survey form.</span></span></button>
-      <button type="button" onclick="chooseAdmin()" class="hover-lift flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700">${lockIcon}</span><span class="min-w-0"><span class="block text-sm font-semibold text-slate-900">Admin</span><span class="mt-0.5 block text-xs text-slate-500">Login to manage records and review submissions.</span></span></button>
-      <button type="button" onclick="go('status')" class="w-full pt-1 text-center text-xs font-medium text-pine-700 hover:underline">Already submitted? Check your request status</button>
-    </div>`}
+    </form>
   </div>
 </div>`;
 }
@@ -823,14 +898,12 @@ function recs(){
   <div id="records-results">${recordsCard()}</div>`,actions);
 }
 
-function chooseAdmin(){loginRole='admin';loginError='';draw();setTimeout(()=>{const u=document.getElementById('u');if(u)u.focus()},0)}
-function backToRoles(){loginRole='';loginError='';draw()}
 
 function publicShell(body,title='Resident Survey Form',subtitle='Fill out your details below. The barangay admin will review your response.'){
   return `<div class="relative min-h-screen bg-cream text-slate-900">
   <header class="border-b border-slate-200 bg-white"><div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-    <div class="flex min-w-0 items-center gap-2.5"><span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span><span class="min-w-0"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span></span></div>
-    <div class="flex items-center gap-2"><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button><button type="button" onclick="go('login')" class="${btnGhost}">Back</button></div>
+    <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span><span class="min-w-0"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span></span></button>
+    <div class="flex items-center gap-2"><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button></div>
   </div></header>
   <main class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:py-10"><div class="${animateNext?'animate-fade-up':''}">
     <div class="mb-6"><h1 class="text-2xl font-semibold tracking-tight text-slate-900">${title}</h1><p class="mt-1 text-sm text-slate-500">${subtitle}</p></div>
@@ -848,7 +921,7 @@ function submitPublic(rec){
   go('thanks');
 }
 function thanks(){
-  return publicShell(`<div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center sm:p-9"><div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">${checkIcon}</div><h2 class="mt-4 text-lg font-semibold text-slate-900">Thank you! Your survey was submitted.</h2><p class="mt-2 text-sm leading-6 text-slate-500">The barangay admin will review your response. Once accepted, you will be added to the resident records.</p><div class="mt-5 rounded-xl bg-pine-50 px-4 py-3"><p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-pine-600">Your reference code</p><p class="mt-1 font-mono text-xl font-semibold tracking-wider text-pine-800">${esc(lastRef)}</p><p class="mt-1 text-xs text-slate-500">Save this code. Use it to check if your request was accepted or declined.</p></div><div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" class="${btnPrimary}" onclick="viewRef(lastRef)">Check status</button><button type="button" class="${btnGhost}" onclick="go('public')">Submit another response</button><button type="button" class="${btnGhost}" onclick="go('login')">Back to start</button></div></div>`,'Submitted','Your response has been sent to the barangay admin.');
+  return publicShell(`<div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center sm:p-9"><div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">${checkIcon}</div><h2 class="mt-4 text-lg font-semibold text-slate-900">Thank you! Your survey was submitted.</h2><p class="mt-2 text-sm leading-6 text-slate-500">The barangay admin will review your response. Once accepted, you will be added to the resident records.</p><div class="mt-5 rounded-xl bg-pine-50 px-4 py-3"><p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-pine-600">Your reference code</p><p class="mt-1 font-mono text-xl font-semibold tracking-wider text-pine-800">${esc(lastRef)}</p><p class="mt-1 text-xs text-slate-500">Save this code. Use it to check if your request was accepted or declined.</p></div><div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" class="${btnPrimary}" onclick="viewRef(lastRef)">Check status</button><button type="button" class="${btnGhost}" onclick="go('public')">Submit another response</button><button type="button" class="${btnGhost}" onclick="go('home')">Back to start</button></div></div>`,'Submitted','Your response has been sent to the barangay admin.');
 }
 
 function setSubTab(t){subTab=t;draw()}
