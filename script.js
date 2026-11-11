@@ -65,6 +65,14 @@ const makeId=()=>{
   const max=residents.reduce((m,r)=>{const n=Number(String(r.id||'').replace(/\D/g,''));return Number.isFinite(n)&&n>m?n:m},0);
   return `R-${String(max+1).padStart(3,'0')}`;
 };
+const sameInfo=(a,b)=>{
+  const n=v=>String(v??'').toLowerCase().replace(/\s+/g,' ').trim();
+  const kids=r=>JSON.stringify((r.children||[]).map(c=>[n(c.name),String(c.age??''),c.here==='No'?'No':'Yes']));
+  const keys=['name','birthday','sex','civil','spouse','job','purok','pwd','pwdType','pwdId','contact','employment','voter','fourPs','remarks'];
+  if(n(ageOf(a))!==n(ageOf(b)))return false;
+  if(kids(a)!==kids(b))return false;
+  return keys.every(k=>n(a[k])===n(b[k]));
+};
 const normName=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||'');return m?`${m[3]}-${m[2]}-${m[1]}`:(d||'')};
@@ -543,7 +551,6 @@ function saveSurvey(){
   if(pwdSel&&pwdSel.value==='Yes'&&!val('pwd-type'))problems.push(['pwd-type','Select the type of PWD.','Type of PWD']);
   const contactVal=val('contact').trim();
   if(contactVal&&!/^(09|\+639)[0-9]{9}$/.test(contactVal))problems.push(['contact','Use 09XXXXXXXXX or +639XXXXXXXXX.','Contact number']);
-  if(!problems.some(x=>x[0]==='lastname'||x[0]==='firstname')&&residents.some((r,i)=>i!==editIndex&&normName(r.name)===normName(name)))problems.push(['lastname','A resident with this name already exists.','Name (already exists)']);
   if(problems.length){
     problems.forEach(([id,msg,label])=>setFieldError(id,msg,label));
     refreshFormSummary();
@@ -558,6 +565,13 @@ function saveSurvey(){
   const finalAge=computedAge===''?Number(val('age'))||'':computedAge;
   const isMinor=finalAge!==''&&Number(finalAge)<18;
   const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(titleCase(val('spouse-last')),titleCase(val('spouse-first')),titleCase(val('spouse-middle'))),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''),fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
+  if(residents.some((r,i)=>i!==editIndex&&sameInfo(r,rec))){
+    setFieldError('lastname','This resident is already recorded with exactly the same information. Change at least one detail to save.','Resident already exists (all information is the same)');
+    refreshFormSummary();
+    const f=document.getElementById('lastname');
+    if(f){f.scrollIntoView({behavior:'smooth',block:'center'});f.focus({preventScroll:true})}
+    return;
+  }
   if(editIndex>=0){
     residents[editIndex]=rec;
     linkSpouse(rec.uid,isMinor?'':val('spouse-link'));
