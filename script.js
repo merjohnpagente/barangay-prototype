@@ -403,6 +403,8 @@ function toggleMenu(){
   setTimeout(()=>{panel.classList.add('hidden');panel.classList.remove('is-closing')},200);
 }
 
+const menuBtn=(cls)=>`<button id="mbtn" type="button" onclick="toggleMenu()" aria-label="Menu" aria-expanded="false" aria-controls="mnav" class="${cls}"><svg class="ic-open h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="ic-close hidden h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+function toggleMenu(){const m=document.getElementById('mnav'),b=document.getElementById('mbtn');if(!m||!b)return;const open=m.classList.toggle('hidden')===false;b.setAttribute('aria-expanded',open);b.querySelector('.ic-open').classList.toggle('hidden',open);b.querySelector('.ic-close').classList.toggle('hidden',!open)}
 const hNav='text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75 transition-colors hover:text-white';
 const hFeatures=[[usersIcon,'Resident survey','Fill out your personal, family, housing and contact details online. No login needed.'],[checkIcon,'Request tracking','Use your reference code to see if your submission was accepted or declined.'],[heartIcon,'Complete profile','Personal, physical, family, housing and sectoral information in one form.'],[lockIcon,'Admin review','Barangay staff review every submission before it is added to the resident records.']];
 const hSteps=[['01','Fill out the survey','Answer the resident survey form. It only takes a few minutes.'],['02','Save your reference code','You get a code after submitting. Keep it so you can check later.'],['03','Check your status','See if the barangay admin accepted or declined your submission.']];
@@ -418,8 +420,14 @@ function home(){
       <nav class="flex items-center gap-4 sm:gap-7" aria-label="Main navigation">
         <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="${hNav} hidden border-b-2 border-emerald-400 pb-0.5 text-white sm:inline">Home</button>
         <button type="button" onclick="go('public')" class="${hNav} hidden sm:inline">Resident Survey</button>
-        <button type="button" onclick="go('login')" class="rounded-lg bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#06130e] shadow-[0_0_24px_-6px_rgba(52,211,153,.9)] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Log in</button>
+        <button type="button" onclick="go('login')" class="hidden rounded-lg bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#06130e] shadow-[0_0_24px_-6px_rgba(52,211,153,.9)] hover:bg-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Log in</button>
       </nav>
+      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:hidden')}
+    </div>
+    <div id="mnav" class="hidden border-t border-white/10 sm:hidden">
+      <button type="button" onclick="toggleMenu();window.scrollTo({top:0,behavior:'smooth'})" class="block w-full border-b border-white/10 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Home</button>
+      <button type="button" onclick="go('public')" class="block w-full border-b border-white/10 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-white/5">Resident Survey</button>
+      <button type="button" onclick="go('login')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400 hover:bg-white/5">Log in</button>
     </div>
   </header>
 
@@ -486,10 +494,17 @@ function login(){
   return `<div class="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-cream px-4 py-10">
   <div class="pointer-events-none absolute inset-0" aria-hidden="true"><div class="absolute -left-40 top-1/4 h-[34rem] w-[34rem] rounded-full bg-pine-100/70 blur-[130px] animate-drift"></div><div class="absolute -bottom-48 right-0 h-[30rem] w-[30rem] rounded-full bg-emerald-100/60 blur-[120px] animate-drift"></div></div>
   <header class="absolute inset-x-0 top-0 z-20">
-    <nav class="mx-auto flex max-w-6xl items-center justify-end gap-5 px-4 py-4 sm:gap-7 sm:px-6" aria-label="Main navigation">
-      <button type="button" onclick="go('home')" class="border-b-2 border-emerald-500 pb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button>
-      <button type="button" onclick="go('public')" class="rounded-lg bg-pine-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-pine-800">Resident Survey</button>
-    </nav>
+    <div class="mx-auto flex max-w-6xl items-center justify-end gap-5 px-4 py-4 sm:gap-7 sm:px-6">
+      <nav class="hidden items-center gap-5 sm:flex sm:gap-7" aria-label="Main navigation">
+        <button type="button" onclick="go('home')" class="border-b-2 border-emerald-500 pb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button>
+        <button type="button" onclick="go('public')" class="rounded-lg bg-pine-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-pine-800">Resident Survey</button>
+      </nav>
+      ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-pine-800 hover:bg-pine-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700 sm:hidden')}
+    </div>
+    <div id="mnav" class="hidden border-y border-slate-200 bg-white/95 shadow-sm backdrop-blur sm:hidden">
+      <button type="button" onclick="go('home')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Home</button>
+      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Resident Survey</button>
+    </div>
   </header>
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
   <div class="relative z-10 w-full max-w-md ${animateNext?'animate-fade-up':''} rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
