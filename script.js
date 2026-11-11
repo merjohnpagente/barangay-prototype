@@ -435,11 +435,11 @@ function home(){
     <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(251,146,60,.28),transparent_60%)]"></div>
       <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-orange-500/10 blur-[120px] animate-drift"></div>
-      <img src="assets/barangay-logo.webp?v=3" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 object-contain opacity-30 drop-shadow-2xl aspect-square sm:right-[max(3%,calc((100%_-_90rem)/2))] sm:h-[min(46rem,calc(100vh_-_7rem))] sm:w-auto sm:opacity-100">
-      <div class="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent sm:w-[45%] sm:via-white/50"></div>
+      <img src="assets/barangay-logo.webp?v=3" alt="" class="absolute -right-24 top-1/2 aspect-square h-[26rem] w-[26rem] -translate-y-1/2 object-contain opacity-30 drop-shadow-2xl sm:hidden">
+      <div class="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent sm:hidden"></div>
       <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent sm:h-0"></div>
     </div>
-    <div class="mx-auto w-full max-w-[90rem] px-4 pb-12 pt-6 sm:px-6 sm:pb-24 sm:pt-8">
+    <div class="mx-auto w-full max-w-[90rem] px-4 pb-12 pt-6 sm:grid sm:grid-cols-2 sm:items-center sm:gap-10 sm:px-6 sm:pb-16 sm:pt-8">
       <div class="max-w-2xl">
         <span class="reveal inline-flex items-center gap-2 rounded-full border border-orange-400/30 bg-orange-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700"><span class="h-1.5 w-1.5 rounded-full bg-orange-400"></span>Web-based resident survey</span>
         <h1 class="mt-5">
@@ -459,6 +459,7 @@ function home(){
           <div class="text-center"><p class="text-2xl font-bold text-orange-500">${puroks.length}</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">Puroks</p></div>
         </div>
       </div>
+      <div class="hidden justify-center sm:flex"><img src="assets/barangay-logo.webp?v=3" alt="Barangay Migcanaway seal" class="aspect-square h-auto max-h-[calc(100vh_-_9rem)] w-full max-w-[40rem] object-contain drop-shadow-2xl"></div>
     </div>
   </section>
 
