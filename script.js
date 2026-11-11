@@ -420,13 +420,14 @@ function home(){
       <nav class="flex items-center gap-4 sm:gap-7" aria-label="Main navigation">
         <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="${hNav} hidden border-b-2 border-orange-400 pb-0.5 text-slate-900 sm:inline">Home</button>
         <button type="button" onclick="go('public')" class="${hNav} hidden sm:inline">Resident Survey</button>
-        <button type="button" onclick="go('login')" class="rounded-lg bg-orange-500 px-3 py-2 text-[11px] font-bold uppercase sm:px-4 tracking-[0.14em] text-white shadow-[0_0_24px_-6px_rgba(249,115,22,.55)] hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Log in</button>
+        <button type="button" onclick="go('login')" class="hidden rounded-lg bg-orange-500 px-3 py-2 text-[11px] font-bold uppercase sm:inline-block sm:px-4 tracking-[0.14em] text-white shadow-[0_0_24px_-6px_rgba(249,115,22,.55)] hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Log in</button>
       </nav>
       ${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-slate-900 hover:bg-orange-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 sm:hidden')}
     </div>
     <div id="mnav" class="hidden border-t border-slate-200 sm:hidden">
       <button type="button" onclick="togglePubMenu();window.scrollTo({top:0,behavior:'smooth'})" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Home</button>
-      <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Resident Survey</button>
+      <button type="button" onclick="go('public')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 hover:bg-orange-50">Resident Survey</button>
+      <button type="button" onclick="go('login')" class="block w-full px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.2em] text-orange-600 hover:bg-orange-50">Log in</button>
     </div>
   </header>
 
@@ -931,11 +932,12 @@ function publicShell(body,title='Resident Survey Form',subtitle='Fill out your d
   <header class="border-b border-slate-200 bg-white"><div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
     <button type="button" onclick="go('home')" aria-label="Go to home" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span><span class="min-w-0"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span></span></button>
     <nav class="hidden items-center gap-5 sm:flex" aria-label="Main navigation"><button type="button" onclick="go('home')" class="text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Home</button><button type="button" onclick="go('public')" class="${v==='public'?'border-b-2 border-orange-500 pb-0.5 ':''}text-[11px] font-semibold uppercase tracking-[0.16em] text-pine-800 transition-colors hover:text-pine-600">Resident Survey</button><button type="button" onclick="go('status')" class="${btnGhost}">Check status</button><button type="button" onclick="go('login')" class="${btnPrimary}">Log in</button></nav>
-    <div class="ml-auto flex items-center gap-1.5 sm:hidden"><button type="button" onclick="go('status')" class="${btnGhost} !px-3 !py-2 text-xs">Check status</button><button type="button" onclick="go('login')" class="${btnPrimary} !px-3 !py-2 text-xs">Log in</button>${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-pine-800 hover:bg-pine-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700')}</div>
+    <div class="ml-auto flex items-center gap-1.5 sm:hidden"><button type="button" onclick="go('status')" class="${btnGhost} !px-3 !py-2 text-xs">Check status</button>${menuBtn('grid h-10 w-10 place-items-center rounded-lg text-pine-800 hover:bg-pine-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700')}</div>
   </div>
   <div id="mnav" class="hidden border-t border-slate-200 bg-white sm:hidden">
     <button type="button" onclick="go('home')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Home</button>
-    <button type="button" onclick="go('public')" class="block w-full px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Resident Survey</button>
+    <button type="button" onclick="go('public')" class="block w-full border-b border-slate-200 px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-pine-800 hover:bg-slate-50">Resident Survey</button>
+    <button type="button" onclick="go('login')" class="block w-full px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.2em] text-orange-600 hover:bg-slate-50">Log in</button>
   </div></header>
   <main class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:py-10"><div class="${animateNext?'animate-fade-up':''}">
     <div class="mb-6"><h1 class="text-2xl font-semibold tracking-tight text-slate-900">${title}</h1><p class="mt-1 text-sm text-slate-500">${subtitle}</p></div>
