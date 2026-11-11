@@ -1,4 +1,5 @@
 const puroks=['Purok 1','Purok 2','Purok 3','Purok 4','Purok 5'];
+const jobOptions=['Accountant','Baker','Barangay health worker','Barangay official','Barangay tanod','Barber','Business owner','Caregiver','Carpenter','Cashier','Call center agent','Construction worker','Cook','Delivery rider','Domestic helper','Driver','Electrician','Engineer','Factory worker','Farm worker','Farmer','Fisherman','Government employee','Hairdresser','Housekeeper','Jeepney driver','Janitor','Laundry worker','Mason','Mechanic','Motorcycle taxi driver (habal-habal)','Nurse','Office worker','Overseas Filipino worker (OFW)','Painter','Plumber','Police officer','Private school teacher','Public school teacher','Sales clerk','Sari-sari store owner','Seafarer','Security guard','Senior high student','Soldier','Store helper','Street vendor','Student','Tailor','Tricycle driver','Truck driver','Vendor (market)','Waiter / Waitress','Welder'];
 const pwdTypes=['Visual disability','Hearing disability','Speech and language impairment','Physical / orthopedic disability','Intellectual disability','Learning disability','Mental / psychosocial disability','Chronic illness','Rare disease','Cancer','Multiple disabilities','Others'];
 const pat=[['Yes'],['No'],['Yes'],['No'],['No']];
 const AUTH_KEY='barangay-session-v1';
@@ -390,7 +391,7 @@ const childRow=(c={})=>{
   const cv=childView(c),linked=!!cv.linked;
   return `<div class="child-row grid grid-cols-12 items-center gap-2">
   <select class="child-link ${field} col-span-12" aria-label="Link child to a resident already in the system" onchange="linkChild(this)"><option value="">New child — type details below</option>${residentOptions(linked?c.uid:'',selfUid())}</select>
-  <input class="child-name ${field} col-span-12 sm:col-span-4" placeholder="Child's full name" aria-label="Child's full name" value="${esc(cv.name||'')}" ${linked?'readonly':''}>
+  <input class="child-name ${field} col-span-12 sm:col-span-4" placeholder="Child's full name" aria-label="Child's full name" oninput="capName(this)" autocapitalize="words" value="${esc(cv.name||'')}" ${linked?'readonly':''}>
   <input type="number" min="0" max="120" class="child-age ${field} col-span-4 sm:col-span-2" placeholder="Age" aria-label="Child's age" value="${esc(cv.age??'')}" ${linked?'readonly':''}>
   <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Resident of Barangay Migcanaway or not" ${linked?'disabled':''}><option value="Yes" ${cv.here!=='No'?'selected':''}>Resident</option><option value="No" ${cv.here==='No'?'selected':''}>Non-resident</option></select>
   <button type="button" onclick="this.closest('.child-row').remove()" class="col-span-12 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:col-span-3" aria-label="Remove this child" title="Remove this child">${closeIcon}<span>Remove</span></button>
@@ -476,7 +477,7 @@ function addChildRow(){
 function readChildren(){
   return [...document.querySelectorAll('.child-row')].map(row=>{
     const age=row.querySelector('.child-age').value,uid=row.querySelector('.child-link').value;
-    return {name:row.querySelector('.child-name').value.trim(),age:age===''?'':Number(age),here:row.querySelector('.child-here').value==='No'?'No':'Yes',...(uid?{uid}:{})};
+    return {name:titleCase(row.querySelector('.child-name').value.trim()),age:age===''?'':Number(age),here:row.querySelector('.child-here').value==='No'?'No':'Yes',...(uid?{uid}:{})};
   }).filter(c=>c.name);
 }
 const householdBlock=r=>{
@@ -518,7 +519,7 @@ function survey(){
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
       <div id="civil-wrap" class="sm:col-span-2 ${editing&&ageOf(r)!==''&&Number(ageOf(r))<18?'hidden':''}"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
       <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><select id="spouse-link" class="${field} mb-3" aria-label="Link spouse already in the system" onchange="linkSpouseSel(this)"><option value="">Not in system — type name below</option>${residentOptions(spLinked?r.spouseUid:'',r.uid||'')}</select><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}" ${spLinked?'readonly':''} oninput="capName(this,${k==='middle'})" autocapitalize="words">`).join('')}</div></div>
-      <div class="sm:col-span-2"><label class="${labelCls}" for="work">Work / occupation</label><input id="work" class="${field}" placeholder="e.g. Farmer" value="${esc(r.job||'')}"></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="work-select">Work / occupation</label>${(()=>{const cur=String(r.job||'').trim();const match=jobOptions.find(j=>j.toLowerCase()===cur.toLowerCase());const sel=match||(cur?'Other':'');return `<select id="work-select" class="${field}" onchange="syncWork()"><option value="">Select</option>${jobOptions.map(j=>`<option ${j===sel?'selected':''}>${j}</option>`).join('')}<option ${sel==='Other'?'selected':''}>Other</option></select><input id="work-other" class="${field} mt-2 ${sel==='Other'?'':'hidden'}" placeholder="Type the occupation" aria-label="Other occupation" value="${esc(sel==='Other'?cur:'')}" oninput="capName(this);syncWork()" autocapitalize="words">`})()}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
     <section class="border-t border-slate-100 pt-8"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Children</h2></div><button type="button" class="${btnGhost}" onclick="addChildRow()">Add child</button></div><div id="children-list" class="mt-5 space-y-3">${(Array.isArray(r.children)?r.children:[]).map(childRow).join('')}</div></section>
@@ -533,13 +534,13 @@ function survey(){
     </div></section>
   </div>
   <div id="form-summary" class="hidden border-t border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700 sm:px-7" role="alert"></div>
-  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':'Save resident'}</button></div>
+  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil();syncWorkVisibility()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':'Save resident'}</button></div>
 </form>`);
 }
 
 function saveSurvey(){
   const val=id=>(document.getElementById(id)||{}).value||'';
-  ['lastname','firstname','middlename','pwd-type','contact'].forEach(clearFieldError);
+  ['lastname','firstname','middlename','pwd-type','contact','work-other'].forEach(clearFieldError);
   const errBox=document.getElementById('form-error');
   if(errBox){errBox.textContent='';errBox.classList.add('hidden')}
   const name=joinName(titleCase(val('lastname')),titleCase(val('firstname')),titleCase(val('middlename')));
@@ -549,6 +550,7 @@ function saveSurvey(){
   if(isInitialOnly(val('middlename')))problems.push(['middlename','Write the middle name in full, not just an initial.','Middle name']);
   const pwdSel=document.querySelector('input[name="pwd"]:checked');
   if(pwdSel&&pwdSel.value==='Yes'&&!val('pwd-type'))problems.push(['pwd-type','Select the type of PWD.','Type of PWD']);
+  if((document.getElementById('work-select')||{}).value==='Other'&&!val('work-other').trim())problems.push(['work-other','Type the occupation.','Work / occupation']);
   const contactVal=val('contact').trim();
   if(contactVal&&!/^(09|\+639)[0-9]{9}$/.test(contactVal))problems.push(['contact','Use 09XXXXXXXXX or +639XXXXXXXXX.','Contact number']);
   if(problems.length){
@@ -564,7 +566,7 @@ function saveSurvey(){
   const id=editIndex>=0?residents[editIndex].id:makeId();
   const finalAge=computedAge===''?Number(val('age'))||'':computedAge;
   const isMinor=finalAge!==''&&Number(finalAge)<18;
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(titleCase(val('spouse-last')),titleCase(val('spouse-first')),titleCase(val('spouse-middle'))),job:val('work').trim(),purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment'),voter:isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''),fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(titleCase(val('spouse-last')),titleCase(val('spouse-first')),titleCase(val('spouse-middle'))),job:workValue(),purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment')||(workValue()?(/student/i.test(workValue())?'Student':'Employed'):''),voter:isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''),fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
   if(residents.some((r,i)=>i!==editIndex&&sameInfo(r,rec))){
     setFieldError('lastname','This resident is already recorded with exactly the same information. Change at least one detail to save.','Resident already exists (all information is the same)');
     refreshFormSummary();
@@ -598,6 +600,22 @@ function syncAge(){
   const input=document.getElementById('age');
   if(input)input.value=a;
   syncCivil();
+}
+function workValue(){
+  const sel=(document.getElementById('work-select')||{}).value||'';
+  if(sel==='Other')return titleCase(((document.getElementById('work-other')||{}).value||'').trim());
+  return sel;
+}
+function syncWorkVisibility(){
+  const sel=document.getElementById('work-select'),other=document.getElementById('work-other');
+  const isOther=!!sel&&sel.value==='Other';
+  if(other){other.classList.toggle('hidden',!isOther);if(!isOther){other.value='';clearFieldError('work-other')}}
+}
+function syncWork(){
+  syncWorkVisibility();
+  const w=workValue();
+  const emp=document.getElementById('employment');
+  if(emp&&w)emp.value=/student/i.test(w)?'Student':'Employed';
 }
 function syncBirthYear(){
   const ageEl=document.getElementById('age'),bEl=document.getElementById('birthday');
