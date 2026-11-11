@@ -412,7 +412,7 @@ function home(){
   const total=residents.length;
   return `<div id="top" class="relative min-h-screen overflow-x-hidden bg-white text-slate-900">
   <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
-    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <div class="mx-auto flex max-w-[90rem] items-center justify-between gap-3 px-4 py-3 sm:px-6">
       <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="flex min-w-0 items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">
         <span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.webp?v=3" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span>
         <span class="min-w-0"><span class="block truncate text-sm font-bold tracking-[0.14em] text-slate-900">MIGCANAWAY</span><span class="block truncate text-[9px] uppercase tracking-[0.2em] text-orange-600">Tangub City</span></span>
@@ -435,11 +435,11 @@ function home(){
     <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(251,146,60,.28),transparent_60%)]"></div>
       <div class="absolute -left-32 top-1/3 h-[28rem] w-[28rem] rounded-full bg-orange-500/10 blur-[120px] animate-drift"></div>
-      <img src="assets/barangay-logo.webp?v=3" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 object-contain opacity-30 drop-shadow-2xl aspect-square sm:right-[max(3%,calc((100%_-_72rem)/2))] sm:h-[min(46rem,calc(100vh_-_7rem))] sm:w-auto sm:opacity-100">
+      <img src="assets/barangay-logo.webp?v=3" alt="" class="absolute -right-24 top-1/2 h-[26rem] w-[26rem] -translate-y-1/2 object-contain opacity-30 drop-shadow-2xl aspect-square sm:right-[max(3%,calc((100%_-_90rem)/2))] sm:h-[min(46rem,calc(100vh_-_7rem))] sm:w-auto sm:opacity-100">
       <div class="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/70 to-transparent sm:w-[45%] sm:via-white/50"></div>
       <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent sm:h-0"></div>
     </div>
-    <div class="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-24 sm:pt-8">
+    <div class="mx-auto w-full max-w-[90rem] px-4 pb-12 pt-6 sm:px-6 sm:pb-24 sm:pt-8">
       <div class="max-w-2xl">
         <span class="reveal inline-flex items-center gap-2 rounded-full border border-orange-400/30 bg-orange-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-700"><span class="h-1.5 w-1.5 rounded-full bg-orange-400"></span>Web-based resident survey</span>
         <h1 class="mt-5">
