@@ -28,10 +28,11 @@ function extraSections(r,so,editing){
 const pwdTypes=['Visual disability','Hearing disability','Speech and language impairment','Physical / orthopedic disability','Intellectual disability','Learning disability','Mental / psychosocial disability','Chronic illness','Rare disease','Cancer','Multiple disabilities','Others'];
 const pat=[['Yes'],['No'],['Yes'],['No'],['No']];
 const AUTH_KEY='barangay-session-v1';
-const VIEWS=['dashboard','records','survey'];
+const VIEWS=['dashboard','records','survey','submissions'];
+const isPub=()=>v==='public'||v==='thanks';
 const savedView=(()=>{try{const s=localStorage.getItem(AUTH_KEY);return s==='assistance'?'records':s==='reports'?'dashboard':VIEWS.includes(s)?s:null}catch(e){return null}})();
 let animateNext=true;
-let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='';
+let v=savedView||'login',page=1,toast='',q='',filterBy='all',purokBy='all',viewIndex=-1,deleteIndex=-1,editIndex=-1,loginError='',loginRole='',subTab='pending',subIndex=-1,declineIndex=-1;
 const AUTH_USER='admin',AUTH_PASS='admin123';
 
 const newUid=()=>'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -87,6 +88,12 @@ let residents=(()=>{
   }catch{return seed}
 })();
 const persist=()=>{renumber(residents);try{localStorage.setItem(STORE,JSON.stringify(residents))}catch{}};
+const SUBS_KEY='barangay-submissions-v1';
+let submissions=(()=>{try{const x=JSON.parse(localStorage.getItem(SUBS_KEY));return Array.isArray(x)?x:[]}catch{return []}})();
+const persistSubs=()=>{try{localStorage.setItem(SUBS_KEY,JSON.stringify(submissions))}catch{}};
+const reloadSubs=()=>{try{const x=JSON.parse(localStorage.getItem(SUBS_KEY));if(Array.isArray(x))submissions=x}catch{}};
+const pendingCount=()=>submissions.filter(x=>x.status==='pending').length;
+const fmtDT=iso=>{const d=new Date(iso);return iso&&!isNaN(d)?d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}):''};
 const makeId=()=>{
   const max=residents.reduce((m,r)=>{const n=Number(String(r.id||'').replace(/\D/g,''));return Number.isFinite(n)&&n>m?n:m},0);
   return `R-${String(max+1).padStart(3,'0')}`;
@@ -166,15 +173,16 @@ const usersIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const heartIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>`;
 const checkIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>`;
 const clockIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
+const lockIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`;
 const menuIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-5 w-5" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
 const printIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>`;
 const trashIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>`;
 const closeIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-4 w-4" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12"/></svg>`;
 const logoutIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M15 12H3m0 0 3-3m-3 3 3 3M10 5V3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-9v-2"/></svg>`;
 
-const navItems=[['dashboard','Dashboard'],['records','Residents'],['survey','Survey']];
-const navGroups=[['Overview',navItems.slice(0,1)],['Records',navItems.slice(1,3)]];
-const navBtn=(k,l)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}">${l}</button>`;
+const navItems=[['dashboard','Dashboard'],['records','Residents'],['submissions','Submissions'],['survey','Survey']];
+const navGroups=[['Overview',navItems.slice(0,1)],['Records',navItems.slice(1)]];
+const navBtn=(k,l)=>`<button type="button" onclick="go('${k}')" ${v===k?'aria-current="page"':''} class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${v===k?'bg-pine-50 font-medium text-pine-800':'text-slate-500 hover:bg-slate-50 hover:text-slate-900'} flex items-center justify-between gap-2">${l}${k==='submissions'&&pendingCount()?`<span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">${pendingCount()}</span>`:''}</button>`;
 const navGroupMarkup=()=>navGroups.map(([label,items])=>`<div><p class="px-3 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">${label}</p><div class="space-y-0.5">${items.map(([k,l])=>navBtn(k,l)).join('')}</div></div>`).join('');
 const logoutBtn=`<button type="button" onclick="logout()" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-red-50 hover:text-red-700">${logoutIcon}Logout</button>`;
 const userCard=`<div class="mx-3 mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-pine-700 text-sm font-bold text-white">SA</span><div class="min-w-0"><p class="truncate text-xs font-semibold text-slate-900">System Admin</p><span class="mt-1 inline-flex rounded-full bg-pine-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-pine-700">Admin</span></div></div>`;
@@ -222,7 +230,7 @@ function shell(title,subtitle,body,actions=''){
 }
 
 function draw(){
-  const views={login,dashboard,survey,records:recs};
+  const views={login,dashboard,survey,records:recs,submissions:subs,public:survey,thanks};
   document.getElementById('app').innerHTML=views[v]();
   animateNext=false;
   renderModal();
@@ -264,11 +272,12 @@ function animClose(fn){
 function renderModal(){
   let el=document.getElementById('modal-root');
   if(!el){el=document.createElement('div');el.id='modal-root';document.body.appendChild(el)}
-  el.innerHTML=v==='records'?((viewIndex>=0?residentModal():'')+(deleteIndex>=0?deleteModal():'')):'';
+  el.innerHTML=v==='records'?((viewIndex>=0?residentModal():'')+(deleteIndex>=0?deleteModal():'')):v==='submissions'?((subIndex>=0?subModal():'')+(declineIndex>=0?declineModal():'')):'';
 }
 function go(k){
   v=k;animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;deleteIndex=-1;editIndex=-1;
-  try{k==='login'?localStorage.removeItem(AUTH_KEY):localStorage.setItem(AUTH_KEY,k)}catch(e){}
+  loginRole='';subIndex=-1;declineIndex=-1;if(k==='dashboard'||k==='submissions')reloadSubs();
+  try{VIEWS.includes(k)?localStorage.setItem(AUTH_KEY,k):localStorage.removeItem(AUTH_KEY)}catch(e){}
   draw()
 }
 function editResident(i){editIndex=i;v='survey';animateNext=true;page=1;q='';filterBy='all';purokBy='all';viewIndex=-1;draw()}
@@ -276,7 +285,9 @@ function openResident(i){viewIndex=i;renderModal()}
 function closeResident(){animClose(()=>{viewIndex=-1;renderModal()})}
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  if(deleteIndex>=0)closeDelete();
+  if(declineIndex>=0)closeDecline();
+  else if(subIndex>=0)closeSub();
+  else if(deleteIndex>=0)closeDelete();
   else if(viewIndex>=0)closeResident();
 });
 function askDelete(i){deleteIndex=i;renderModal()}
@@ -377,12 +388,17 @@ function login(){
   <p class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[24vw] font-bold tracking-tighter text-pine-900/[0.04]" aria-hidden="true">MIGCANAWAY</p>
   <div class="relative z-10 w-full max-w-md ${animateNext?'animate-fade-up':''} rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_100px_-40px_rgba(12,40,34,0.35)] sm:p-9">
     <div class="text-center"><div class="flex items-center justify-center gap-4"><img src="assets/barangay-logo.jpg" alt="Barangay Migcanaway seal" class="h-16 w-16 rounded-full object-cover ring-1 ring-slate-200 sm:h-20 sm:w-20"><img src="assets/tangub-logo.jpg" alt="Tangub City seal" class="h-16 w-16 object-contain sm:h-20 sm:w-20"></div><p class="mt-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-pine-600">Barangay</p><h1 class="mt-2 text-3xl font-semibold tracking-[0.08em] text-pine-800">MIGCANAWAY</h1><p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500">Tangub City</p><p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Resident Survey</p><div class="mx-auto mt-6 h-px w-2/3 bg-gradient-to-r from-transparent via-pine-200 to-transparent"></div></div>
-    <form class="mt-6 space-y-4" onsubmit="event.preventDefault();attemptLogin()">
+    ${loginRole==='admin'?`<form class="mt-6 space-y-4" onsubmit="event.preventDefault();attemptLogin()">
+      <button type="button" onclick="backToRoles()" class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-pine-700">&larr; Back</button>
       <div><label class="${labelCls}" for="u">Username</label><input id="u" class="${field}" placeholder="Enter username" autocomplete="username" required></div>
       <div><label class="${labelCls}" for="p">Password</label><input id="p" type="password" class="${field}" placeholder="Enter password" autocomplete="current-password" required></div>
       ${loginError?`<p role="alert" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">${loginError}</p>`:''}
       <button type="submit" class="${btnPrimary} mt-2 w-full px-4 py-3">Login</button>
-    </form>
+    </form>`:`<div class="mt-6 space-y-3">
+      <p class="text-center text-xs font-medium text-slate-500">Continue as</p>
+      <button type="button" onclick="go('public')" class="hover-lift flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-pine-50 text-pine-700">${usersIcon}</span><span class="min-w-0"><span class="block text-sm font-semibold text-slate-900">Resident</span><span class="mt-0.5 block text-xs text-slate-500">No login needed. Fill out the survey form.</span></span></button>
+      <button type="button" onclick="chooseAdmin()" class="hover-lift flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-700"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700">${lockIcon}</span><span class="min-w-0"><span class="block text-sm font-semibold text-slate-900">Admin</span><span class="mt-0.5 block text-xs text-slate-500">Login to manage records and review submissions.</span></span></button>
+    </div>`}
   </div>
 </div>`;
 }
@@ -397,7 +413,7 @@ function dashboard(){
   const stats=[[s.total,'Total residents','Registered residents',usersIcon,'text-pine-700'],[s.pwd,'PWD residents','Persons with disability',heartIcon,'text-pine-600']];
   return shell('Dashboard','A quick look at the residents of the barangay.',`<section class="relative mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
     <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(23,69,59,0.09),transparent_48%)]" aria-hidden="true"></div>
-    <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview · Tangub City</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's an overview of the resident records today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('records')">View residents</button></div></div>
+    <div class="relative z-10 max-w-2xl"><p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-pine-600">Barangay overview · Tangub City</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">${greeting}, <span class="text-pine-700">Admin</span>.</h2><p class="mt-2 text-sm leading-6 text-slate-500">${today} — here's an overview of the resident records today.</p><div class="mt-5 flex flex-wrap gap-2"><button type="button" class="${btnPrimary}" onclick="go('survey')">New resident</button><button type="button" class="${btnGhost}" onclick="go('records')">View residents</button>${pendingCount()?`<button type="button" class="${btn} border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100" onclick="go('submissions')">Review ${pendingCount()} pending</button>`:''}</div></div>
   </section>
   <div class="grid grid-cols-2 gap-3">${stats.map(([n,l,cap,icon,tone])=>dashStat(n,l,cap,icon,tone)).join('')}</div>
   <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">${ageDash()}</div>
@@ -410,13 +426,13 @@ function dashboard(){
   </div>`);
 }
 
-const residentOptions=(selected,exclude)=>residents.filter(x=>x.uid&&x.uid!==exclude).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),undefined,{sensitivity:'base'})).map(x=>`<option value="${esc(x.uid)}" ${x.uid===selected?'selected':''}>${esc(x.name)} (${esc(x.id||'')})</option>`).join('');
+const residentOptions=(selected,exclude)=>isPub()?'':residents.filter(x=>x.uid&&x.uid!==exclude).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),undefined,{sensitivity:'base'})).map(x=>`<option value="${esc(x.uid)}" ${x.uid===selected?'selected':''}>${esc(x.name)} (${esc(x.id||'')})</option>`).join('');
 const selfUid=()=>editIndex>=0&&residents[editIndex]?residents[editIndex].uid:'';
 const yn=(name,cur)=>`<div class="flex gap-6 pt-2">${['Yes','No'].map(x=>`<label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600"><input type="radio" name="${name}" value="${x}" class="h-4 w-4 accent-pine-700" ${cur===x?'checked':''}>${x}</label>`).join('')}</div>`;
 const childRow=(c={})=>{
   const cv=childView(c),linked=!!cv.linked;
   return `<div class="child-row grid grid-cols-12 items-center gap-2">
-  <select class="child-link ${field} col-span-12" aria-label="Link child to a resident already in the system" onchange="linkChild(this)"><option value="">New child — type details below</option>${residentOptions(linked?c.uid:'',selfUid())}</select>
+  <select class="child-link ${field} col-span-12 ${isPub()?'hidden':''}" aria-label="Link child to a resident already in the system" onchange="linkChild(this)"><option value="">New child — type details below</option>${residentOptions(linked?c.uid:'',selfUid())}</select>
   <input class="child-name ${field} col-span-12 sm:col-span-4" placeholder="Child's full name" aria-label="Child's full name" oninput="capName(this)" autocapitalize="words" value="${esc(cv.name||'')}" ${linked?'readonly':''}>
   <input type="number" min="0" max="120" class="child-age ${field} col-span-4 sm:col-span-2" placeholder="Age" aria-label="Child's age" value="${esc(cv.age??'')}" ${linked?'readonly':''}>
   <select class="child-here ${field} col-span-8 sm:col-span-3" aria-label="Resident of Barangay Migcanaway or not" ${linked?'disabled':''}><option value="Yes" ${cv.here!=='No'?'selected':''}>Resident</option><option value="No" ${cv.here==='No'?'selected':''}>Non-resident</option></select>
@@ -512,21 +528,21 @@ const householdBlock=r=>{
   return `<div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Household</h3><span class="text-xs text-slate-500">${hh.length+1} members</span></div><ul class="mt-1 divide-y divide-slate-100">${hh.map(({res,rel})=>`<li class="flex items-center justify-between gap-3 py-2.5"><button type="button" onclick="openResident(${residents.indexOf(res)})" class="min-w-0 truncate text-left text-sm font-medium text-pine-700 hover:underline">${esc(res.name)}</button><span class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">${rel}</span></li>`).join('')}</ul></div>`;
 };
 const spouseLabel=sex=>sex==='Female'?'Husband':sex==='Male'?'Wife':'Spouse';
-function residentModal(){
-  const r=residents[viewIndex];
-  if(viewIndex<0||!r)return '';
+function residentModal(ro,footer,cf='closeResident()'){
+  const r=ro||residents[viewIndex];
+  if(!r)return '';
   const kids=(Array.isArray(r.children)?r.children:[]).map(childView);
   const row=(l,val)=>`<div><dt class="text-[11px] font-medium uppercase tracking-wide text-slate-400">${l}</dt><dd class="mt-0.5 text-sm text-slate-800">${val===''||val==null?'—':esc(val)}</dd></div>`;
   const here=kids.filter(c=>c.here!=='No').length;
   const kidList=kids.length?kids.map(c=>`<li class="flex items-center justify-between gap-3 py-2.5"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-900">${esc(c.name)}</p><p class="text-xs text-slate-500">${c.age===''||c.age==null?'Age not recorded':esc(c.age)+' years old'}${c.linked?' · In system':''}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${c.here==='No'?'bg-amber-50 text-amber-700':'bg-emerald-50 text-emerald-700'}">${c.here==='No'?'Non-resident':'Resident'}</span></li>`).join(''):`<li class="py-3 text-sm text-slate-500">No children recorded.</li>`;
-  return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)closeResident()" role="dialog" aria-modal="true" aria-label="Resident details">
+  return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)${cf}" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
-    <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="closeResident()" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
+    <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'New submission')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="${cf}" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
     <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r)===''?'':ageOf(r)+(ageGroup(r)?' · '+ageGroup(r):''))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||spouseName(r)?row(spouseLabel(r.sex),spouseName(r)):''}${row('Work',r.job)}${scholarOf(r)?row('Scholar',scholarOf(r)):''}${row('PWD',r.pwd)}${r.pwd==='Yes'?row('Type of PWD',r.pwdType)+row('PWD ID number',r.pwdId):''}${row('Purok',r.purok)}${row('Contact',r.contact)}${r.emName||r.emContact?row('Emergency contact',[r.emName,r.emRel?`(${r.emRel})`:''].filter(Boolean).join(' '))+row('Emergency number',r.emContact):''}${row('Employment',r.employment)}${row('Registered voter',r.voter)}${row('4Ps beneficiary',r.fourPs)}${[['Name extension',r.nameExt],['Place of birth',r.birthPlace],['Citizenship',r.citizenship],['Ethnicity',r.ethnicity],['Religion',r.religion],['Education',r.education],['Height',r.height?r.height+' cm':''],['Weight',r.weight?r.weight+' kg':''],['Blood type',r.bloodType],['Complexion',r.complexion],['Email',r.email],['Street / house no.',r.street],['Last year voted',r.voterYear],["Mother's maiden name",r.motherMaiden],['Family head',r.famHead],['Relationship to family head',r.famRel],['Solo parent',r.soloParent],['OFW',r.ofw],['Housing type',r.housingType],['Tenure status',r.tenure]].filter(x=>x[1]).map(([k,v])=>row(k,v)).join('')}</dl>
     ${r.remarks?`<div class="mt-4"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Remarks</p><p class="mt-0.5 whitespace-pre-line text-sm text-slate-700">${esc(r.remarks)}</p></div>`:''}
     <div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Children</h3>${kids.length?`<span class="text-xs text-slate-500">${here} of ${kids.length} resident${kids.length>1?'s':''}</span>`:''}</div><ul class="mt-1 divide-y divide-slate-100">${kidList}</ul></div>
     ${householdBlock(r)}
-    <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDelete(${viewIndex})">Delete</button><button type="button" class="${btnPrimary}" onclick="editResident(${viewIndex})">Edit</button></div>
+    ${footer!==undefined?footer:`<div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDelete(${viewIndex})">Delete</button><button type="button" class="${btnPrimary}" onclick="editResident(${viewIndex})">Edit</button></div>`}
   </div></div>`;
 }
 
@@ -535,9 +551,9 @@ function survey(){
   const r=editing?residents[editIndex]:{};
   const nm=splitName(r.name),sp=splitName(spouseName(r)),spLinked=!!byUid(r.spouseUid);
   const so=(a,selected='')=>`<select class="${field}"><option value="">Select</option>${a.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}</select>`;
-  return shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile.':'Add a resident to the survey record.',`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" novalidate onsubmit="event.preventDefault();saveSurvey()">
+  const formHtml=`<form class="overflow-hidden rounded-xl border border-slate-200 bg-white" novalidate onsubmit="event.preventDefault();saveSurvey()">
   <div class="space-y-8 p-5 sm:p-7">
-    <section><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p></div><div class="flex items-center gap-2">${editing?`<span class="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span>`:''}<button type="button" onclick="go('records')" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close and return to Residents" title="Close">${closeIcon}</button></div></div><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
+    <section><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-sm font-semibold text-slate-900">Personal information</h2><p class="mt-0.5 text-xs text-slate-500">Basic details for the resident record.</p></div><div class="flex items-center gap-2">${editing?`<span class="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span>`:''}<button type="button" onclick="go('${isPub()?'login':'records'}')" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="${isPub()?'Close and return to the start page':'Close and return to Residents'}" title="Close">${closeIcon}</button></div></div><div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
       ${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<div class="sm:col-span-2"><label class="${labelCls}" for="${k}name">${l}</label><input id="${k}name" class="${field}" placeholder="${l}" value="${esc(nm[k])}" ${k!=='middle'?'required':''} oninput="capName(this,${k==='middle'});clearFormError()" autocapitalize="words"></div>`).join('')}
       <p id="form-error" class="hidden text-xs font-medium text-red-600 sm:col-span-6 sm:-mt-3" role="alert"></p>
       <div class="sm:col-span-2"><label class="${labelCls}" for="name-ext">Name extension</label>${so(nameExts,r.nameExt).replace('<select','<select id="name-ext"')}</div>
@@ -546,7 +562,7 @@ function survey(){
       <div class="sm:col-span-1"><label class="${labelCls}" for="sex">Sex</label>${so(['Male','Female'],r.sex).replace('<select','<select id="sex" onchange="syncSpouse()"')}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="birthday">Birthdate</label><input id="birthday" type="date" class="${field}" aria-describedby="birthday-hint" value="${esc(r.birthday||'')}" onchange="syncAge()"><p id="birthday-hint" class="mt-1 text-[11px] text-slate-400">Age updates automatically each year.</p></div>
       <div id="civil-wrap" class="sm:col-span-2 ${editing&&ageOf(r)!==''&&Number(ageOf(r))<18?'hidden':''}"><label class="${labelCls}" for="civil">Civil status</label>${so(['Single','Married','Widowed','Separated','Annulled'],r.civil||'Single').replace('<select','<select id="civil" onchange="syncSpouse()"')}</div>
-      <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><select id="spouse-link" class="${field} mb-3" aria-label="Link spouse already in the system" onchange="linkSpouseSel(this)"><option value="">Not in system — type name below</option>${residentOptions(spLinked?r.spouseUid:'',r.uid||'')}</select><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}" ${spLinked?'readonly':''} oninput="capName(this,${k==='middle'})" autocapitalize="words">`).join('')}</div></div>
+      <div id="spouse-wrap" class="sm:col-span-6 ${(r.civil==='Married'||r.spouse)?'':'hidden'}"><p id="spouse-label" class="${labelCls}">${spouseLabel(r.sex)}</p><select id="spouse-link" class="${field} mb-3 ${isPub()?'hidden':''}" aria-label="Link spouse already in the system" onchange="linkSpouseSel(this)"><option value="">Not in system — type name below</option>${residentOptions(spLinked?r.spouseUid:'',r.uid||'')}</select><div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-3">${[['last','Last name'],['first','First name'],['middle','Middle name']].map(([k,l])=>`<input id="spouse-${k}" class="${field}" placeholder="${l}" aria-label="${spouseLabel(r.sex)} ${l.toLowerCase()}" value="${esc(sp[k])}" ${spLinked?'readonly':''} oninput="capName(this,${k==='middle'})" autocapitalize="words">`).join('')}</div></div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="work-select">Work / occupation</label>${(()=>{const cur=String(r.job||'').trim();const match=jobOptions.find(j=>j.toLowerCase()===cur.toLowerCase());const sel=match||(cur?'Other':'');return `<select id="work-select" class="${field}" onchange="syncWork()"><option value="">Select</option>${jobOptions.map(j=>`<option ${j===sel?'selected':''}>${j}</option>`).join('')}<option ${sel==='Other'?'selected':''}>Other</option></select><input id="work-other" class="${field} mt-2 ${sel==='Other'?'':'hidden'}" placeholder="Type the occupation" aria-label="Other occupation" value="${esc(sel==='Other'?cur:'')}" oninput="capName(this);syncWork()" autocapitalize="words">`})()}</div>
       <div class="sm:col-span-2"><label class="${labelCls}" for="purok">Purok / address</label>${so(puroks,r.purok).replace('<select','<select id="purok"')}</div>
     </div></section>
@@ -573,8 +589,9 @@ function survey(){
     </div></section>
   </div>
   <div id="form-summary" class="hidden border-t border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700 sm:px-7" role="alert"></div>
-  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil();syncWorkVisibility()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':'Save resident'}</button></div>
-</form>`);
+  <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/60 px-5 py-4 sm:px-7"><button type="reset" class="${btnGhost}" onclick="document.getElementById('children-list').innerHTML='';setTimeout(()=>{syncPwd();syncCivil();syncWorkVisibility()},0)">Clear</button><button type="submit" class="${btnPrimary}">${editing?'Save changes':isPub()?'Submit survey':'Save resident'}</button></div>
+</form>`;
+  return isPub()?publicShell(formHtml):shell(editing?'Edit Resident':'Resident Survey Form',editing?'Update the resident profile.':'Add a resident to the survey record.',formHtml);
 }
 
 function saveSurvey(){
@@ -615,6 +632,7 @@ function saveSurvey(){
   const finalAge=computedAge===''?Number(val('age'))||'':computedAge;
   const isMinor=finalAge!==''&&Number(finalAge)<18;
   const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(titleCase(val('spouse-last')),titleCase(val('spouse-first')),titleCase(val('spouse-middle'))),job:workValue(),emName:titleCase(val('em-name').trim()),emRel:val('em-rel'),emContact:val('em-contact').trim(),nameExt:val('name-ext'),birthPlace:titleCase(val('birth-place').trim()),citizenship:titleCase(val('citizenship').trim()),ethnicity:titleCase(val('ethnicity').trim()),religion:titleCase(val('religion').trim()),education:val('education'),height:val('height').trim(),weight:val('weight').trim(),bloodType:val('blood-type'),complexion:val('complexion'),email:val('email').trim(),street:titleCase(val('street').trim()),voterYear:((isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''))==='Yes')?val('voter-year').trim():'',motherMaiden:titleCase(val('mother-maiden').trim()),famHead:titleCase(val('fam-head').trim()),famRel:val('fam-rel'),soloParent:(document.querySelector('input[name="solo"]:checked')||{}).value||'',ofw:(document.querySelector('input[name="ofw"]:checked')||{}).value||'',housingType:val('housing-type'),tenure:val('tenure'),scholar:(document.querySelector('input[name="scholar"]:checked')||{}).value||'',purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment')||(workValue()?(/student/i.test(workValue())?'Student':'Employed'):''),voter:isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''),fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
+  if(isPub()){submitPublic(rec);return}
   if(residents.some((r,i)=>i!==editIndex&&sameInfo(r,rec))){
     setFieldError('lastname','This resident is already recorded with exactly the same information. Change at least one detail to save.','Resident already exists (all information is the same)');
     refreshFormSummary();
@@ -782,5 +800,87 @@ function recs(){
   </div>
   <div id="records-results">${recordsCard()}</div>`,actions);
 }
+
+function chooseAdmin(){loginRole='admin';loginError='';draw();setTimeout(()=>{const u=document.getElementById('u');if(u)u.focus()},0)}
+function backToRoles(){loginRole='';loginError='';draw()}
+
+function publicShell(body,title='Resident Survey Form',subtitle='Fill out your details below. The barangay admin will review your response.'){
+  return `<div class="relative min-h-screen bg-cream text-slate-900">
+  <header class="border-b border-slate-200 bg-white"><div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <div class="flex min-w-0 items-center gap-2.5"><span class="flex shrink-0 items-center gap-1.5"><img src="assets/barangay-logo.jpg" alt="" class="h-9 w-9 rounded-full object-cover"><img src="assets/tangub-logo.jpg" alt="" class="h-9 w-9 object-contain"></span><span class="min-w-0"><span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-pine-600">Barangay</span><span class="block text-sm font-semibold tracking-[0.1em] text-slate-900">MIGCANAWAY</span></span></div>
+    <button type="button" onclick="go('login')" class="${btnGhost}">Back</button>
+  </div></header>
+  <main class="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:py-10"><div class="${animateNext?'animate-fade-up':''}">
+    <div class="mb-6"><h1 class="text-2xl font-semibold tracking-tight text-slate-900">${title}</h1><p class="mt-1 text-sm text-slate-500">${subtitle}</p></div>
+    ${body}
+  </div></main>
+</div>`;
+}
+function submitPublic(rec){
+  delete rec.id;
+  reloadSubs();
+  submissions.unshift({sid:newUid(),submittedAt:new Date().toISOString(),status:'pending',data:rec});
+  persistSubs();
+  go('thanks');
+}
+function thanks(){
+  return publicShell(`<div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center sm:p-9"><div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">${checkIcon}</div><h2 class="mt-4 text-lg font-semibold text-slate-900">Thank you! Your survey was submitted.</h2><p class="mt-2 text-sm leading-6 text-slate-500">The barangay admin will review your response. Once accepted, you will be added to the resident records.</p><div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" class="${btnGhost}" onclick="go('public')">Submit another response</button><button type="button" class="${btnPrimary}" onclick="go('login')">Back to start</button></div></div>`,'Submitted','Your response has been sent to the barangay admin.');
+}
+
+function setSubTab(t){subTab=t;draw()}
+function openSub(i){subIndex=i;renderModal()}
+function closeSub(){animClose(()=>{subIndex=-1;renderModal()})}
+function subs(){
+  const tabs=[['pending','Pending'],['accepted','Accepted'],['declined','Declined']];
+  const count=t=>submissions.filter(x=>x.status===t).length;
+  const list=submissions.map((x,i)=>({x,i})).filter(({x})=>x.status===subTab);
+  const tabBtns=tabs.map(([k,l])=>`<button type="button" onclick="setSubTab('${k}')" ${subTab===k?'aria-current="page"':''} class="${btn} ${subTab===k?'bg-pine-700 text-white hover:bg-pine-800':'border border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}">${l}<span class="rounded-full px-1.5 text-[11px] ${subTab===k?'bg-white/20':'bg-slate-100'}">${count(k)}</span></button>`).join('');
+  const dateHead=subTab==='pending'?'Submitted':subTab==='accepted'?'Accepted on':'Declined on';
+  const empty={pending:'No pending submissions.',accepted:'No accepted submissions yet.',declined:'No declined submissions.'}[subTab];
+  const rows=list.length?list.map(({x,i})=>{const d=x.data;return `<tr onclick="openSub(${i})" class="cursor-pointer transition-colors hover:bg-slate-50/70"><td class="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">${esc(d.name)}</td><td class="px-3 py-3.5 text-slate-600">${esc(ageOf(d))}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-600">${esc(d.purok||'')}</td><td class="px-3 py-3.5 text-slate-600">${esc(d.job||'')}</td><td class="whitespace-nowrap px-3 py-3.5 text-slate-500">${fmtDT(subTab==='pending'?x.submittedAt:x.reviewedAt)}</td><td class="px-5 py-3.5 text-right"><button type="button" class="${btnGhost} px-3 py-1.5" onclick="event.stopPropagation();openSub(${i})">${subTab==='pending'?'Review':'View'}</button></td></tr>`}).join(''):`<tr><td colspan="6" class="px-5 py-10 text-center text-sm text-slate-500">${empty}</td></tr>`;
+  return shell('Submissions','Survey responses sent by residents. Accept to add them to the records, or decline.',`<div class="mb-3 flex flex-wrap gap-2">${tabBtns}</div><div class="overflow-hidden rounded-xl border border-slate-200 bg-white"><div class="overflow-x-auto"><table class="w-full min-w-[720px] text-left text-sm"><thead class="bg-slate-50 text-xs font-medium text-slate-500"><tr><th class="px-5 py-3 font-medium">Name</th><th class="px-3 py-3 font-medium">Age</th><th class="px-3 py-3 font-medium">Purok</th><th class="px-3 py-3 font-medium">Work</th><th class="px-3 py-3 font-medium">${dateHead}</th><th class="px-5 py-3"></th></tr></thead><tbody class="divide-y divide-slate-100">${rows}</tbody></table></div></div>`);
+}
+function subModal(){
+  const x=submissions[subIndex];
+  if(!x)return '';
+  const footer=x.status==='pending'
+    ?`<div class="mt-6 flex justify-end gap-2"><button type="button" class="${btn} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" onclick="askDecline(${subIndex})">Decline</button><button type="button" class="${btnPrimary}" onclick="acceptSub(${subIndex})">Accept</button></div>`
+    :`<div class="mt-6 rounded-lg px-3 py-2.5 text-xs ${x.status==='accepted'?'bg-emerald-50 text-emerald-700':'bg-red-50 text-red-700'}">${x.status==='accepted'?'Accepted':'Declined'} on ${fmtDT(x.reviewedAt)}${x.reason?` · Reason: ${esc(x.reason)}`:''}</div>`;
+  return residentModal(x.data,footer,'closeSub()');
+}
+function acceptSub(i){
+  const x=submissions[i];
+  if(!x||x.status!=='pending')return;
+  const rec={...x.data,id:makeId(),uid:x.data.uid||newUid()};
+  if(residents.some(r=>sameInfo(r,rec))){flash('Already in the records. Decline it instead.');return}
+  saveResident(rec);
+  x.status='accepted';x.reviewedAt=new Date().toISOString();persistSubs();
+  subIndex=-1;declineIndex=-1;draw();flash('Accepted and added to Residents');
+}
+function askDecline(i){declineIndex=i;renderModal();setTimeout(()=>{const t=document.getElementById('decline-reason');if(t)t.focus()},0)}
+function closeDecline(){animClose(()=>{declineIndex=-1;renderModal()})}
+function declineModal(){
+  const x=submissions[declineIndex];
+  if(!x)return '';
+  return `<div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4" onclick="if(event.target===this)closeDecline()" role="alertdialog" aria-modal="true" aria-label="Decline submission">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+    <div class="grid h-11 w-11 place-items-center rounded-full bg-red-50 text-red-600">${closeIcon}</div>
+    <h2 class="mt-4 text-base font-semibold text-slate-900">Decline this submission?</h2>
+    <p class="mt-1 text-sm text-slate-600"><span class="font-medium text-slate-900">${esc(x.data.name)}</span> will not be added to the records.</p>
+    <label class="${labelCls} mt-4" for="decline-reason">Reason (optional)</label><textarea id="decline-reason" class="${field} min-h-[4.5rem] resize-y" placeholder="e.g. Incomplete or incorrect information"></textarea>
+    <div class="mt-6 flex justify-end gap-2"><button type="button" class="${btnGhost}" onclick="closeDecline()">Cancel</button><button type="button" class="${btn} bg-red-600 text-white hover:bg-red-700" onclick="confirmDecline()">Decline</button></div>
+  </div></div>`;
+}
+function confirmDecline(){
+  const x=submissions[declineIndex];
+  if(!x||x.status!=='pending')return;
+  x.status='declined';x.reviewedAt=new Date().toISOString();
+  x.reason=((document.getElementById('decline-reason')||{}).value||'').trim();
+  persistSubs();
+  subIndex=-1;declineIndex=-1;draw();flash('Submission declined');
+}
+window.addEventListener('storage',e=>{
+  if(e.key===SUBS_KEY){reloadSubs();if(v==='submissions'&&subIndex<0&&declineIndex<0||v==='dashboard')draw()}
+});
 
 draw();
