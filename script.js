@@ -481,7 +481,7 @@ function home(){
       </div>
       <div class="mt-10 flex flex-wrap items-center gap-3">
         <button type="button" onclick="go('public')" class="rounded-lg bg-orange-500 px-5 py-3 text-sm font-bold text-white hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Take the Survey</button>
-        <button type="button" onclick="go('login')" class="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-orange-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Admin log in</button>
+        <button type="button" onclick="go('login')" class="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-orange-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">Log in</button>
       </div>
     </div>
   </section>
