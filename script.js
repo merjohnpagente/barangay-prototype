@@ -69,7 +69,7 @@ const makeId=()=>{
 const sameInfo=(a,b)=>{
   const n=v=>String(v??'').toLowerCase().replace(/\s+/g,' ').trim();
   const kids=r=>JSON.stringify((r.children||[]).map(c=>[n(c.name),String(c.age??''),c.here==='No'?'No':'Yes']));
-  const keys=['name','birthday','sex','civil','spouse','job','scholar','purok','pwd','pwdType','pwdId','contact','employment','voter','fourPs','remarks'];
+  const keys=['name','birthday','sex','civil','spouse','job','scholar','emName','emRel','emContact','purok','pwd','pwdType','pwdId','contact','employment','voter','fourPs','remarks'];
   if(n(ageOf(a))!==n(ageOf(b)))return false;
   if(kids(a)!==kids(b))return false;
   return keys.every(k=>n(a[k])===n(b[k]));
@@ -294,7 +294,7 @@ function setPage(n){page=n;renderRecords()}
 function exportCsv(){
   const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
   const kidsText=r=>(Array.isArray(r.children)?r.children:[]).map(childView).map(c=>`${c.name} (${c.age===''||c.age==null?'age n/a':c.age+' yrs'}, ${c.here==='No'?'Non-resident':'Resident'})`).join('; ');
-  const rows=[['ID','Name','Age','Age Group','Birthdate','Sex','Civil Status','Spouse','Children','Household Members','Contact Number','Work','Scholar','Employment Status','Registered Voter','4Ps Beneficiary','Purok','PWD','PWD Type','PWD ID Number','Remarks'],...[...residents].sort((x,y)=>String(x.name||'').localeCompare(String(y.name||''),undefined,{sensitivity:'base'})).map(r=>[r.id||'',r.name,ageOf(r),ageGroup(r),r.birthday?fmtDate(r.birthday):'',r.sex||'',r.civil||'',spouseName(r),kidsText(r),householdOf(r).map(h=>`${h.res.name} (${h.rel})`).join('; '),r.contact||'',r.job||'',scholarOf(r),r.employment||'',r.voter||'',r.fourPs||'',r.purok||'',r.pwd||'',r.pwd==='Yes'?(r.pwdType||''):'',r.pwd==='Yes'?(r.pwdId||''):'',r.remarks||''])];
+  const rows=[['ID','Name','Age','Age Group','Birthdate','Sex','Civil Status','Spouse','Children','Household Members','Contact Number','Emergency Contact','Emergency Relationship','Emergency Number','Work','Scholar','Employment Status','Registered Voter','4Ps Beneficiary','Purok','PWD','PWD Type','PWD ID Number','Remarks'],...[...residents].sort((x,y)=>String(x.name||'').localeCompare(String(y.name||''),undefined,{sensitivity:'base'})).map(r=>[r.id||'',r.name,ageOf(r),ageGroup(r),r.birthday?fmtDate(r.birthday):'',r.sex||'',r.civil||'',spouseName(r),kidsText(r),householdOf(r).map(h=>`${h.res.name} (${h.rel})`).join('; '),r.contact||'',r.emName||'',r.emRel||'',r.emContact||'',r.job||'',scholarOf(r),r.employment||'',r.voter||'',r.fourPs||'',r.purok||'',r.pwd||'',r.pwd==='Yes'?(r.pwdType||''):'',r.pwd==='Yes'?(r.pwdId||''):'',r.remarks||''])];
   const csv=rows.map(row=>row.map(cell).join(',')).join('\r\n');
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
@@ -497,7 +497,7 @@ function residentModal(){
   return `<div class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4" onclick="if(event.target===this)closeResident()" role="dialog" aria-modal="true" aria-label="Resident details">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6">
     <div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-600">${esc(r.id||'')}</span><h2 class="mt-2 text-lg font-semibold tracking-tight text-slate-900">${esc(r.name)}</h2><p class="mt-0.5 text-xs text-slate-500">${esc(r.purok||'No purok')} · Barangay Migcanaway, Tangub City</p></div><button type="button" onclick="closeResident()" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Close" title="Close">${closeIcon}</button></div>
-    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r)===''?'':ageOf(r)+(ageGroup(r)?' · '+ageGroup(r):''))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||spouseName(r)?row(spouseLabel(r.sex),spouseName(r)):''}${row('Work',r.job)}${scholarOf(r)?row('Scholar',scholarOf(r)):''}${row('PWD',r.pwd)}${r.pwd==='Yes'?row('Type of PWD',r.pwdType)+row('PWD ID number',r.pwdId):''}${row('Purok',r.purok)}${row('Contact',r.contact)}${row('Employment',r.employment)}${row('Registered voter',r.voter)}${row('4Ps beneficiary',r.fourPs)}</dl>
+    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">${row('Age',ageOf(r)===''?'':ageOf(r)+(ageGroup(r)?' · '+ageGroup(r):''))}${row('Sex',r.sex)}${row('Birthdate',fmtDate(r.birthday))}${row('Civil status',r.civil)}${r.civil==='Married'||spouseName(r)?row(spouseLabel(r.sex),spouseName(r)):''}${row('Work',r.job)}${scholarOf(r)?row('Scholar',scholarOf(r)):''}${row('PWD',r.pwd)}${r.pwd==='Yes'?row('Type of PWD',r.pwdType)+row('PWD ID number',r.pwdId):''}${row('Purok',r.purok)}${row('Contact',r.contact)}${r.emName||r.emContact?row('Emergency contact',[r.emName,r.emRel?`(${r.emRel})`:''].filter(Boolean).join(' '))+row('Emergency number',r.emContact):''}${row('Employment',r.employment)}${row('Registered voter',r.voter)}${row('4Ps beneficiary',r.fourPs)}</dl>
     ${r.remarks?`<div class="mt-4"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Remarks</p><p class="mt-0.5 whitespace-pre-line text-sm text-slate-700">${esc(r.remarks)}</p></div>`:''}
     <div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-baseline justify-between gap-2"><h3 class="text-sm font-semibold text-slate-900">Children</h3>${kids.length?`<span class="text-xs text-slate-500">${here} of ${kids.length} resident${kids.length>1?'s':''}</span>`:''}</div><ul class="mt-1 divide-y divide-slate-100">${kidList}</ul></div>
     ${householdBlock(r)}
@@ -532,6 +532,10 @@ function survey(){
       <div class="sm:col-span-3"><span class="${labelCls}">Registered voter</span>${(()=>{const ra=editing?ageOf(r):'';const minorInit=ra!==''&&Number(ra)<18;const html=yn('voter',minorInit?'No':r.voter);return (minorInit?html.replace('value="Yes"','value="Yes" disabled'):html)+`<p id="voter-hint" class="mt-1 text-[11px] text-slate-400 ${minorInit?'':'hidden'}">Under 18 cannot be a registered voter.</p>`})()}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">4Ps beneficiary</span>${yn('fourps',r.fourPs)}</div>
       <div class="sm:col-span-3"><span class="${labelCls}">Scholar</span>${yn('scholar',scholarOf(r))}</div>
+      <div class="sm:col-span-6 border-t border-slate-100 pt-5"><h3 class="text-sm font-semibold text-slate-900">Person to contact in case of emergency</h3><p class="mt-0.5 text-xs text-slate-500">Name and contact number are required.</p></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="em-name">Contact person</label><input id="em-name" class="${field}" placeholder="Full name" value="${esc(r.emName||'')}" oninput="capName(this)" autocapitalize="words" autocomplete="off"></div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="em-rel">Relationship</label>${so(['Spouse','Parent','Child','Sibling','Relative','Neighbor','Friend','Other'],r.emRel).replace('<select','<select id="em-rel"')}</div>
+      <div class="sm:col-span-2"><label class="${labelCls}" for="em-contact">Contact number</label><input id="em-contact" type="tel" inputmode="tel" class="${field}" placeholder="09XXXXXXXXX" value="${esc(r.emContact||'')}" autocomplete="off"></div>
       <div class="sm:col-span-6"><label class="${labelCls}" for="remarks">Remarks</label><textarea id="remarks" class="${field} min-h-[6rem] resize-y" placeholder="Type notes here...">${esc(r.remarks||'')}</textarea></div>
     </div></section>
   </div>
@@ -542,7 +546,7 @@ function survey(){
 
 function saveSurvey(){
   const val=id=>(document.getElementById(id)||{}).value||'';
-  ['lastname','firstname','middlename','pwd-type','contact','work-other'].forEach(clearFieldError);
+  ['lastname','firstname','middlename','pwd-type','contact','work-other','em-name','em-contact'].forEach(clearFieldError);
   const errBox=document.getElementById('form-error');
   if(errBox){errBox.textContent='';errBox.classList.add('hidden')}
   const name=joinName(titleCase(val('lastname')),titleCase(val('firstname')),titleCase(val('middlename')));
@@ -553,6 +557,10 @@ function saveSurvey(){
   const pwdSel=document.querySelector('input[name="pwd"]:checked');
   if(pwdSel&&pwdSel.value==='Yes'&&!val('pwd-type'))problems.push(['pwd-type','Select the type of PWD.','Type of PWD']);
   if((document.getElementById('work-select')||{}).value==='Other'&&!val('work-other').trim())problems.push(['work-other','Type the occupation.','Work / occupation']);
+  if(!val('em-name').trim())problems.push(['em-name','Enter the person to contact in case of emergency.','Emergency contact person']);
+  const emNum=val('em-contact').trim();
+  if(!emNum)problems.push(['em-contact','Enter the emergency contact number.','Emergency contact number']);
+  else if(!/^(09|\+639)[0-9]{9}$/.test(emNum))problems.push(['em-contact','Use 09XXXXXXXXX or +639XXXXXXXXX.','Emergency contact number']);
   const contactVal=val('contact').trim();
   if(contactVal&&!/^(09|\+639)[0-9]{9}$/.test(contactVal))problems.push(['contact','Use 09XXXXXXXXX or +639XXXXXXXXX.','Contact number']);
   if(problems.length){
@@ -568,7 +576,7 @@ function saveSurvey(){
   const id=editIndex>=0?residents[editIndex].id:makeId();
   const finalAge=computedAge===''?Number(val('age'))||'':computedAge;
   const isMinor=finalAge!==''&&Number(finalAge)<18;
-  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(titleCase(val('spouse-last')),titleCase(val('spouse-first')),titleCase(val('spouse-middle'))),job:workValue(),scholar:(document.querySelector('input[name="scholar"]:checked')||{}).value||'',purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment')||(workValue()?(/student/i.test(workValue())?'Student':'Employed'):''),voter:isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''),fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
+  const rec={id,name,age:computedAge===''?Number(val('age'))||'':computedAge,ageYear:nowYear,birthday,sex:val('sex'),civil:isMinor?'':(val('civil')||'Single'),spouse:isMinor?'':joinName(titleCase(val('spouse-last')),titleCase(val('spouse-first')),titleCase(val('spouse-middle'))),job:workValue(),emName:titleCase(val('em-name').trim()),emRel:val('em-rel'),emContact:val('em-contact').trim(),scholar:(document.querySelector('input[name="scholar"]:checked')||{}).value||'',purok:val('purok'),pwd:pwd?pwd.value:'No',pwdType:(pwd&&pwd.value==='Yes')?val('pwd-type'):'',pwdId:(pwd&&pwd.value==='Yes')?val('pwd-id').trim():'',remarks:val('remarks').trim(),children:readChildren(),uid:editIndex>=0?residents[editIndex].uid:newUid(),spouseUid:editIndex>=0?(residents[editIndex].spouseUid||''):'',contact:val('contact').trim(),employment:val('employment')||(workValue()?(/student/i.test(workValue())?'Student':'Employed'):''),voter:isMinor?'No':((document.querySelector('input[name="voter"]:checked')||{}).value||''),fourPs:(document.querySelector('input[name="fourps"]:checked')||{}).value||''};
   if(residents.some((r,i)=>i!==editIndex&&sameInfo(r,rec))){
     setFieldError('lastname','This resident is already recorded with exactly the same information. Change at least one detail to save.','Resident already exists (all information is the same)');
     refreshFormSummary();
